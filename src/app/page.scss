@@ -1,0 +1,61 @@
+@import "../theme/colors.scss";
+@import url("https://fonts.googleapis.com/css2?family=Montserrat&family=Montserrat+Subrayada:wght@700&display=swap");
+.main {
+  height: 100vh;
+  padding: 10px 20px;
+  background: $backgroundColor;
+  font-family: "Montserrat", sans-serif;
+
+  h1 {
+    color: $accentColorDark;
+    font-size: 7vw;
+    font-weight: 500;
+    letter-spacing: 2%;
+    font-family: "Montserrat Subrayada", sans-serif;
+  }
+  .piano-container {
+    width: 100%;
+    margin-top: -5vw;
+
+    .piano-controls-container {
+      margin-bottom: 20px;
+      margin-top: 50px;
+      width: 100%;
+      color: $accentColorDark;
+
+      label {
+        white-space: nowrap;
+      }
+
+      .midi-selector {
+        [role="combobox"] div:first-child {
+          color: $hightlightColorDark;
+          div {
+            color: $hightlightColorDark;
+          }
+        }
+        [role="option"][data-hover="true"] {
+          background-color: $hightlightColorLight;
+          color: $accentColorDark;
+        }
+      }
+
+      .label-switch {
+        input:checked + span {
+          background: $hightlightColorLight;
+          border: 1px solid $hightlightColorDark;
+          &::before {
+            background: $hightlightColorDark;
+          }
+        }
+
+        span {
+          border: 1px solid $accentColorDark;
+          &::before {
+            background: $accentColorDark;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,95 +1,120 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+"use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
+import "./page.scss";
+import { WebMidi } from "webmidi";
+import _ from "lodash";
+import Piano from "@/components/Piano/Piano";
+import { Flex, Label, Select, Switch } from "@hover-design/react";
+
+interface IOptions {
+  label: string;
+  value: string;
+}
 export default function Home() {
+  const [midiOptions, setMidiOptions] = useState<IOptions[]>([]);
+  const [selectedMidiOption, setSelecteMidiOption] = useState<IOptions>({
+    label: "",
+    value: "",
+  });
+  const [playedNotes, setPlayedNotes] = useState<string[]>([]);
+  const [showLabel, setShowLabel] = useState(false);
+
+  useEffect(() => {
+    WebMidi.enable()
+      .then(() => {
+        console.log("WebMidi enabled!");
+
+        const midiOptionsData: IOptions[] = [];
+
+        WebMidi.inputs.forEach((input) =>
+          midiOptionsData.push({ label: input.name, value: input.name })
+        );
+        setMidiOptions(midiOptionsData);
+      })
+      .catch((err) => console.log(err));
+  }, []);
+
+  const myInput = useMemo(() => {
+    return selectedMidiOption?.value
+      ? WebMidi.getInputByName(selectedMidiOption.value)
+      : null;
+  }, [selectedMidiOption]);
+
+  const inputRef = useRef(selectedMidiOption?.value);
+
+  useEffect(() => {
+    if (inputRef.current !== myInput?.name) {
+      inputRef.current &&
+        WebMidi.getInputByName(inputRef.current)?.removeListener("noteon");
+
+      inputRef.current &&
+        WebMidi.getInputByName(inputRef.current)?.removeListener("noteoff");
+      inputRef.current = myInput?.name || "";
+    }
+
+    myInput?.addListener("noteon", (e) => {
+      setPlayedNotes((prev) => _.uniq([...prev, e.note.identifier]));
+    });
+
+    myInput?.addListener("noteoff", (e) => {
+      setPlayedNotes((prev) =>
+        prev.filter((notes) => notes !== e.note.identifier)
+      );
+    });
+  }, [myInput]);
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
+    <Flex className={"main"} alignItems="center">
+      <Flex
+        flexDirection="column"
+        justifyContent="center"
+        className="piano-container"
+      >
+        <h1>THE PIANO</h1>
+        <Flex
+          className="piano-controls-container"
+          alignItems="center"
+          justifyContent="flex-end"
         >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+          <Flex className="piano-controls" flexBasis="30%" gap="20px">
+            <Flex
+              className="control label-switch"
+              flexDirection="column"
+              alignItems="flex-end"
+              flexGrow={2}
+              gap="13px"
+            >
+              <Label htmlFor="label-switch">Show Notes</Label>
+              <Switch
+                id="label-switch"
+                status={showLabel}
+                onChange={(value) => setShowLabel(value as boolean)}
+              />
+            </Flex>
+            <Flex
+              className="control midi-selector"
+              flexDirection="column"
+              flexGrow={5}
+              gap="7px"
+            >
+              <Label htmlFor="midi-selector">Select MIDI Input</Label>
+              <Select
+                borderRadius="20px"
+                color="#6c584c"
+                id="midi-selector"
+                options={midiOptions}
+                onChange={(value) => {
+                  setSelecteMidiOption(value as IOptions);
+                }}
+                value={selectedMidiOption}
+                isClearable
+              />
+            </Flex>
+          </Flex>
+        </Flex>
+        <Piano playedNotes={playedNotes} showLabel={showLabel} />
+      </Flex>
+    </Flex>
+  );
 }

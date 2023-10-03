@@ -1,0 +1,84 @@
+@import "../../theme/colors.scss";
+
+.piano {
+  width: 100%;
+  height: 14vw;
+
+  .keys-container {
+    height: 100%;
+    position: relative;
+
+    .note {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      height: 100%;
+      font-size: 0.7vw;
+      flex: 1;
+      padding: 10px 5px;
+      text-wrap: wrap;
+      &.pressed {
+        background: $hightlightColorDark !important;
+        border: 2px solid white;
+        border-top: none;
+        border-bottom-left-radius: 18px;
+        border-bottom-right-radius: 18px;
+        &.black {
+          background: $hightlightColorLight !important;
+          color: black;
+        }
+      }
+      &.black {
+        font-size: 0.5vw;
+        text-align: center;
+      }
+    }
+
+    .key {
+      background: white;
+      overflow: hidden;
+      flex: 1;
+      height: 100%;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
+      &.black {
+        padding: 2px;
+      }
+      &.white {
+        &:first-child {
+          border-top-left-radius: 20px;
+        }
+        &:last-child {
+          border-top-right-radius: 20px;
+        }
+      }
+    }
+
+    .white-keys-container {
+      display: flex;
+      height: 100%;
+      .key {
+        border: 1px solid $backgroundColor;
+        border-top: none;
+      }
+    }
+    .black-keys-container {
+      display: flex;
+      height: 100%;
+      position: absolute;
+      width: 100%;
+      height: 60%;
+      left: 1%;
+      top: 0;
+      .key {
+        color: white;
+        background: black;
+        margin-inline: 0.3%;
+        &.is-empty {
+          visibility: hidden;
+        }
+      }
+    }
+  }
+}

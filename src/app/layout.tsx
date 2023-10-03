@@ -1,4 +1,5 @@
-import "./globals.css";
+import "./globals.scss";
+import "@hover-design/react/dist/style.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 
