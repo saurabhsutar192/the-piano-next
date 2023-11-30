@@ -1,0 +1,18 @@
+@import "../../theme/colors.scss";
+
+.label-switch {
+  #label-switch:checked + span {
+    background: $hightlightColorLight;
+    border: 1px solid $hightlightColorDark;
+    &::before {
+      background: $hightlightColorDark;
+    }
+  }
+
+  span {
+    border: 1px solid $accentColorDark;
+    &::before {
+      background: $accentColorDark;
+    }
+  }
+}

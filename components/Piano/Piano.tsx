@@ -1,10 +1,12 @@
 import React from "react";
 import "./piano.styles.scss";
 import { noteNames } from "./utils/constants";
+import { Socket } from "socket.io-client";
 
 interface IPiano {
   playedNotes: string[];
   showLabel: boolean;
+  socket: Socket;
 }
 
 const Piano = ({ playedNotes, showLabel = false }: IPiano) => {

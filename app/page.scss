@@ -28,6 +28,7 @@
       }
 
       .midi-selector {
+        width: 250px;
         [role="combobox"] div:first-child {
           color: $hightlightColorDark;
           div {
@@ -37,23 +38,6 @@
         [role="option"][data-hover="true"] {
           background-color: $hightlightColorLight;
           color: $accentColorDark;
-        }
-      }
-
-      .label-switch {
-        input:checked + span {
-          background: $hightlightColorLight;
-          border: 1px solid $hightlightColorDark;
-          &::before {
-            background: $hightlightColorDark;
-          }
-        }
-
-        span {
-          border: 1px solid $accentColorDark;
-          &::before {
-            background: $accentColorDark;
-          }
         }
       }
     }
