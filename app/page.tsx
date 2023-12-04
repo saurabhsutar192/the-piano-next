@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -10,6 +9,8 @@ import { Flex, Label, Select } from "@hover-design/react";
 import Switch from "../components/Switch/Switch";
 import { io } from "socket.io-client";
 import { Socket } from "socket.io-client";
+import { usePianoSound } from "@/hooks/usePianoSound";
+import { pianoNotes } from "@/utils/pianoNotes";
 
 interface IOptions {
   label: string;
@@ -26,12 +27,21 @@ export default function Home() {
   });
   const [playedNotes, setPlayedNotes] = useState<string[]>([]);
   const [showLabel, setShowLabel] = useState(false);
-  const [toggleBroadcast, setToggleBroadcast] = useState(true);
-  const [receivedNotes, setReceivedNotes] = useState<string[]>([]);
+  const [isReceiveMode, setIsReceiveMode] = useState(false);
+  const [isMute, setIsMute] = useState(false);
+  const [liftedNotes, setLiftedNotes] = useState<string[]>(pianoNotes);
+
+  const notesPlay = usePianoSound();
+
+  const myInput = useMemo(() => {
+    return selectedMidiOption?.value
+      ? WebMidi.getInputByName(selectedMidiOption.value)
+      : null;
+  }, [selectedMidiOption]);
+
+  const inputRef = useRef(selectedMidiOption?.value);
 
   useEffect(() => {
-    initializeSocket();
-
     WebMidi.enable()
       .then(() => {
         console.log("WebMidi enabled!");
@@ -44,34 +54,32 @@ export default function Home() {
         setMidiOptions(midiOptionsData);
       })
       .catch((err) => console.log(err));
-
-    // Clean up the socket connection on unmount
-    return () => {
-      socket.disconnect();
-    };
   }, []);
 
   const initializeSocket = async () => {
     socket = io("http://localhost:4000");
-
-    socket.on("connection", () => {
-      console.log("FE Connected");
-    });
-
-    // Listen for incoming messages
-    socket.on("receive-message", (message: any) => {
-      console.log("client", message);
-      setReceivedNotes(message?.playedNotes);
-    });
   };
 
-  const myInput = useMemo(() => {
-    return selectedMidiOption?.value
-      ? WebMidi.getInputByName(selectedMidiOption.value)
-      : null;
-  }, [selectedMidiOption]);
-
-  const inputRef = useRef(selectedMidiOption?.value);
+  useEffect(() => {
+    initializeSocket();
+    if (isReceiveMode) {
+      socket.on(
+        "receive-played-notes",
+        (message: { playedNotes: string[] }) => {
+          setPlayedNotes(message?.playedNotes);
+        }
+      );
+      socket.on(
+        "receive-lifted-notes",
+        (message: { liftedNotes: string[] }) => {
+          setLiftedNotes(message?.liftedNotes);
+        }
+      );
+    }
+    return () => {
+      socket.disconnect();
+    };
+  }, [isReceiveMode]);
 
   useEffect(() => {
     if (inputRef.current !== myInput?.name) {
@@ -83,26 +91,64 @@ export default function Home() {
       inputRef.current = myInput?.name || "";
     }
 
-    myInput?.addListener("noteon", (e) => {
-      setPlayedNotes((prev) => {
-        const notes = _.uniq([...prev, e.note.identifier]);
-        socket.emit("send-message", {
-          playedNotes: notes,
-        });
-        return notes;
-      });
-    });
+    !isReceiveMode
+      ? myInput?.addListener("noteon", (e) => {
+          setLiftedNotes((prev) => {
+            const notes = prev.filter((notes) => notes !== e.note.identifier);
+            socket.emit("send-lifted-notes", {
+              liftedNotes: notes,
+            });
+            return notes;
+          });
+          setPlayedNotes((prev) => {
+            const notes = _.uniq([...prev, e.note.identifier]);
+            socket.emit("send-played-notes", {
+              playedNotes: notes,
+            });
+            playNoteAudio(notes);
+            return notes;
+          });
+        })
+      : myInput?.removeListener("noteon");
 
-    myInput?.addListener("noteoff", (e) => {
-      setPlayedNotes((prev) => {
-        const notes = prev.filter((notes) => notes !== e.note.identifier);
-        socket.emit("send-message", {
-          playedNotes: notes,
-        });
-        return notes;
+    !isReceiveMode
+      ? myInput?.addListener("noteoff", (e) => {
+          setLiftedNotes((prev) => {
+            const notes = _.uniq([...prev, e.note.identifier]);
+            socket.emit("send-lifted-notes", {
+              liftedNotes: notes,
+            });
+            return notes;
+          });
+          setPlayedNotes((prev) => {
+            const notes = prev.filter((notes) => notes !== e.note.identifier);
+            socket.emit("send-played-notes", {
+              playedNotes: notes,
+            });
+            return notes;
+          });
+        })
+      : myInput?.removeListener("noteoff");
+
+    return () => {
+      myInput?.removeListener("noteon");
+
+      myInput?.removeListener("noteoff");
+    };
+  }, [myInput, isReceiveMode, liftedNotes, isMute]);
+
+  useEffect(() => {
+    isReceiveMode && playNoteAudio(playedNotes);
+  }, [isReceiveMode, playedNotes, liftedNotes]);
+
+  const playNoteAudio = (playNotes: string[]) => {
+    if (!isMute) {
+      playNotes.forEach((note) => {
+        const [play] = notesPlay[note];
+        liftedNotes.some((liftNote) => liftNote === note) && play();
       });
-    });
-  }, [myInput]);
+    }
+  };
 
   return (
     <Flex className={"main"} alignItems="center">
@@ -119,10 +165,16 @@ export default function Home() {
         >
           <Flex className="piano-controls" flexBasis="30%" gap="20px">
             <Switch
-              value={toggleBroadcast}
-              setValue={setToggleBroadcast}
+              value={isReceiveMode}
+              setValue={setIsReceiveMode}
               label="Broadcast > Recieve"
               alignItems="flex-end"
+            />
+            <Switch
+              value={isMute}
+              setValue={setIsMute}
+              label="Mute"
+              alignItems="center"
             />
 
             <Flex
@@ -137,6 +189,7 @@ export default function Home() {
                 color="#6c584c"
                 id="midi-selector"
                 options={midiOptions}
+                isDisabled={isReceiveMode}
                 onChange={(value) => {
                   setSelecteMidiOption(value as IOptions);
                 }}
@@ -152,7 +205,11 @@ export default function Home() {
           </Flex>
         </Flex>
         <Piano
-          playedNotes={toggleBroadcast ? playedNotes : receivedNotes}
+          playedNotes={
+            // !isReceiveMode ?
+            playedNotes
+            // : receivedNotes
+          }
           showLabel={showLabel}
           socket={socket}
         />

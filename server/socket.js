@@ -8,7 +8,10 @@ const io = new Server(4000, {
 
 io.on("connection", (socket) => {
   console.log(`Socket ${socket.id} connected.`);
-  socket.on("send-message", (obj) => {
-    io.emit("receive-message", obj);
+  socket.on("send-played-notes", (obj) => {
+    io.emit("receive-played-notes", obj);
+  });
+  socket.on("send-lifted-notes", (obj) => {
+    io.emit("receive-lifted-notes", obj);
   });
 });
