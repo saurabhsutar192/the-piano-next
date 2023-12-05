@@ -7,7 +7,8 @@ export const usePianoSound = () => {
     {};
   pianoNotes.forEach((note) => {
     notesPlay[note] = useSound(
-      `assets/piano-sounds/${note.replace("#", "S")}.wav`
+      `assets/piano-sounds/${note.replace("#", "S")}.wav`,
+      { volume: 0.3 }
     );
   });
 
