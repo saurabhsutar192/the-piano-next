@@ -11,6 +11,7 @@ import { io } from "socket.io-client";
 import { Socket } from "socket.io-client";
 import { usePianoSound } from "@/hooks/usePianoSound";
 import { pianoNotes } from "@/utils/pianoNotes";
+import { INote, NoteEvent } from "@/types/global.types";
 
 interface IOptions {
   label: string;
@@ -25,11 +26,12 @@ export default function Home() {
     label: "",
     value: "",
   });
-  const [playedNotes, setPlayedNotes] = useState<string[]>([]);
+  const [playedNotes, setPlayedNotes] = useState<INote[]>([]);
   const [showLabel, setShowLabel] = useState(false);
   const [isReceiveMode, setIsReceiveMode] = useState(false);
   const [isMute, setIsMute] = useState(false);
-  const [liftedNotes, setLiftedNotes] = useState<string[]>(pianoNotes);
+  const [isSustain, setIsSustain] = useState(false);
+  const [liftedNotes, setLiftedNotes] = useState<INote[]>(pianoNotes);
 
   const notesPlay = usePianoSound();
 
@@ -63,18 +65,12 @@ export default function Home() {
   useEffect(() => {
     initializeSocket();
     if (isReceiveMode) {
-      socket.on(
-        "receive-played-notes",
-        (message: { playedNotes: string[] }) => {
-          setPlayedNotes(message?.playedNotes);
-        }
-      );
-      socket.on(
-        "receive-lifted-notes",
-        (message: { liftedNotes: string[] }) => {
-          setLiftedNotes(message?.liftedNotes);
-        }
-      );
+      socket.on("receive-played-notes", (message: { playedNotes: INote[] }) => {
+        setPlayedNotes(message?.playedNotes);
+      });
+      socket.on("receive-lifted-notes", (message: { liftedNotes: INote[] }) => {
+        setLiftedNotes(message?.liftedNotes);
+      });
     }
     return () => {
       socket.disconnect();
@@ -92,16 +88,21 @@ export default function Home() {
     }
 
     !isReceiveMode
-      ? myInput?.addListener("noteon", (e) => {
+      ? myInput?.addListener("noteon", (e: NoteEvent) => {
           setLiftedNotes((prev) => {
-            const notes = prev.filter((notes) => notes !== e.note.identifier);
+            const notes = prev.filter(
+              (notes) => notes.note !== e.note.identifier
+            );
             socket.emit("send-lifted-notes", {
               liftedNotes: notes,
             });
             return notes;
           });
           setPlayedNotes((prev) => {
-            const notes = _.uniq([...prev, e.note.identifier]);
+            const notes = _.uniq([
+              ...prev,
+              { note: e.note.identifier, velocity: e.rawVelocity as number },
+            ]);
             socket.emit("send-played-notes", {
               playedNotes: notes,
             });
@@ -114,14 +115,23 @@ export default function Home() {
     !isReceiveMode
       ? myInput?.addListener("noteoff", (e) => {
           setLiftedNotes((prev) => {
-            const notes = _.uniq([...prev, e.note.identifier]);
+            const notes = _.uniq([
+              ...prev,
+              {
+                note: e.note.identifier,
+                velocity: 0,
+              },
+            ]);
             socket.emit("send-lifted-notes", {
               liftedNotes: notes,
             });
+            playNoteAudio(notes, !isSustain);
             return notes;
           });
           setPlayedNotes((prev) => {
-            const notes = prev.filter((notes) => notes !== e.note.identifier);
+            const notes = prev.filter(
+              (notes) => notes.note !== e.note.identifier
+            );
             socket.emit("send-played-notes", {
               playedNotes: notes,
             });
@@ -139,15 +149,29 @@ export default function Home() {
 
   useEffect(() => {
     isReceiveMode && playNoteAudio(playedNotes);
-  }, [isReceiveMode, playedNotes, liftedNotes]);
+  }, [isReceiveMode, playedNotes, liftedNotes, isSustain]);
 
-  const playNoteAudio = (playNotes: string[]) => {
+  useEffect(() => {
+    isReceiveMode && playNoteAudio(liftedNotes, !isSustain);
+  }, [isReceiveMode, liftedNotes, isSustain]);
+
+  const playNoteAudio = (playNotes: INote[], isStop?: boolean) => {
     if (!isMute) {
       playNotes.forEach((note) => {
-        const [play] = notesPlay[note];
-        liftedNotes.some((liftNote) => liftNote === note) && play();
+        const [, { sound }] = notesPlay[note.note];
+        if (!isStop) {
+          liftedNotes.some((liftNote) => liftNote.note === note.note) &&
+            sound.volume(convertVelocityToVolume(note.velocity)).play();
+        } else {
+          console.log("stopped");
+          sound.fade(sound.volume(), 0, 200);
+        }
       });
     }
+  };
+
+  const convertVelocityToVolume = (velocity: number) => {
+    return (velocity / 100) * 0.3;
   };
 
   return (
@@ -174,6 +198,12 @@ export default function Home() {
               value={isMute}
               setValue={setIsMute}
               label="Mute"
+              alignItems="center"
+            />
+            <Switch
+              value={isSustain}
+              setValue={setIsSustain}
+              label="Sustain"
               alignItems="center"
             />
 

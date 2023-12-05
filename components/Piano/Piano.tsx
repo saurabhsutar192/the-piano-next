@@ -2,9 +2,10 @@ import React from "react";
 import "./piano.styles.scss";
 import { Socket } from "socket.io-client";
 import { noteNames } from "@/utils/pianoNotes";
+import { INote } from "@/types/global.types";
 
 interface IPiano {
-  playedNotes: string[];
+  playedNotes: INote[];
   showLabel: boolean;
   socket: Socket;
 }
@@ -38,7 +39,7 @@ const Piano = ({ playedNotes, showLabel = false }: IPiano) => {
             <span
               className={`note black ${
                 playedNotes.find(
-                  (note) => note === blackNoteLabel.split(" ").join("")
+                  ({ note }) => note === blackNoteLabel.split(" ").join("")
                 ) && "pressed"
               }`}
             >
@@ -51,7 +52,8 @@ const Piano = ({ playedNotes, showLabel = false }: IPiano) => {
           <div key={i} className={`key white `}>
             <span
               className={`note white ${
-                playedNotes.find((note) => note === whiteNoteLabel) && "pressed"
+                playedNotes.find(({ note }) => note === whiteNoteLabel) &&
+                "pressed"
               }`}
             >
               {showLabel ? whiteNoteLabel : ""}
