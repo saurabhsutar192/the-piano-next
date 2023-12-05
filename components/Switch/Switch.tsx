@@ -7,6 +7,7 @@ interface ISwitch {
   value: boolean;
   setValue: (value: boolean) => void;
   alignItems?: string;
+  isDisabled?: boolean;
 }
 
 const Switch = ({
@@ -14,6 +15,7 @@ const Switch = ({
   label,
   value,
   setValue,
+  isDisabled = false,
 }: ISwitch) => {
   return (
     <Flex
@@ -27,6 +29,7 @@ const Switch = ({
         id="label-switch"
         status={value}
         onChange={(value) => setValue(value as boolean)}
+        isDisabled={isDisabled}
       />
     </Flex>
   );

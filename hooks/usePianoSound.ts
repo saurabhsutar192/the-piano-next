@@ -8,7 +8,7 @@ export const usePianoSound = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [() => void, { sound: Record<string, any> }]
   > = {};
-  pianoNotes.forEach(({ note }) => {
+  pianoNotes.forEach((note) => {
     notesPlay[note] = useSound(
       `assets/piano-sounds/${note.replace("#", "S")}.wav`,
       { volume: 0.3 }

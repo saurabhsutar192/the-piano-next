@@ -25,5 +25,4 @@ export const pianoNotes = noteNames
     return noteSet;
   })
   .join()
-  .split(",")
-  .map((note) => ({ note: note, velocity: 0 }));
+  .split(",");

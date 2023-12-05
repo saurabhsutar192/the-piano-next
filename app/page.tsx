@@ -31,7 +31,7 @@ export default function Home() {
   const [isReceiveMode, setIsReceiveMode] = useState(false);
   const [isMute, setIsMute] = useState(false);
   const [isSustain, setIsSustain] = useState(false);
-  const [liftedNotes, setLiftedNotes] = useState<INote[]>(pianoNotes);
+  const [liftedNotes, setLiftedNotes] = useState<string[]>(pianoNotes);
 
   const notesPlay = usePianoSound();
 
@@ -68,14 +68,29 @@ export default function Home() {
       socket.on("receive-played-notes", (message: { playedNotes: INote[] }) => {
         setPlayedNotes(message?.playedNotes);
       });
-      socket.on("receive-lifted-notes", (message: { liftedNotes: INote[] }) => {
-        setLiftedNotes(message?.liftedNotes);
+      socket.on(
+        "receive-lifted-notes",
+        (message: { liftedNotes: string[] }) => {
+          setLiftedNotes(message?.liftedNotes);
+        }
+      );
+      socket.emit("request-sustain-toggle");
+
+      socket.on("receive-sustain-toggle", (message: { isSustain: boolean }) => {
+        setIsSustain(message?.isSustain);
+      });
+    } else {
+      socket.on("ask-sustain-toggle", () => {
+        socket.emit("send-sustain-toggle", {
+          isSustain,
+        });
       });
     }
+
     return () => {
       socket.disconnect();
     };
-  }, [isReceiveMode]);
+  }, [isReceiveMode, isSustain]);
 
   useEffect(() => {
     if (inputRef.current !== myInput?.name) {
@@ -90,9 +105,7 @@ export default function Home() {
     !isReceiveMode
       ? myInput?.addListener("noteon", (e: NoteEvent) => {
           setLiftedNotes((prev) => {
-            const notes = prev.filter(
-              (notes) => notes.note !== e.note.identifier
-            );
+            const notes = prev.filter((notes) => notes !== e.note.identifier);
             socket.emit("send-lifted-notes", {
               liftedNotes: notes,
             });
@@ -115,17 +128,11 @@ export default function Home() {
     !isReceiveMode
       ? myInput?.addListener("noteoff", (e) => {
           setLiftedNotes((prev) => {
-            const notes = _.uniq([
-              ...prev,
-              {
-                note: e.note.identifier,
-                velocity: 0,
-              },
-            ]);
+            const notes = _.uniq([...prev, e.note.identifier]);
             socket.emit("send-lifted-notes", {
               liftedNotes: notes,
             });
-            playNoteAudio(notes, !isSustain);
+            stopNoteAudio(notes);
             return notes;
           });
           setPlayedNotes((prev) => {
@@ -145,27 +152,31 @@ export default function Home() {
 
       myInput?.removeListener("noteoff");
     };
-  }, [myInput, isReceiveMode, liftedNotes, isMute]);
+  }, [myInput, isReceiveMode, liftedNotes, isMute, isSustain]);
 
   useEffect(() => {
     isReceiveMode && playNoteAudio(playedNotes);
-  }, [isReceiveMode, playedNotes, liftedNotes, isSustain]);
+  }, [isReceiveMode, playedNotes, liftedNotes]);
 
   useEffect(() => {
-    isReceiveMode && playNoteAudio(liftedNotes, !isSustain);
+    isReceiveMode && stopNoteAudio(liftedNotes);
   }, [isReceiveMode, liftedNotes, isSustain]);
 
-  const playNoteAudio = (playNotes: INote[], isStop?: boolean) => {
+  const playNoteAudio = (playNotes: INote[]) => {
     if (!isMute) {
       playNotes.forEach((note) => {
         const [, { sound }] = notesPlay[note.note];
-        if (!isStop) {
-          liftedNotes.some((liftNote) => liftNote.note === note.note) &&
-            sound.volume(convertVelocityToVolume(note.velocity)).play();
-        } else {
-          console.log("stopped");
-          sound.fade(sound.volume(), 0, 200);
-        }
+        liftedNotes.some((liftNote) => liftNote === note.note) &&
+          sound.volume(convertVelocityToVolume(note.velocity)).play();
+      });
+    }
+  };
+
+  const stopNoteAudio = (stopNotes: string[]) => {
+    if (!isSustain) {
+      stopNotes.forEach((note) => {
+        const [, { sound }] = notesPlay[note];
+        sound.fade(sound.volume(), 0, 300);
       });
     }
   };
@@ -202,9 +213,15 @@ export default function Home() {
             />
             <Switch
               value={isSustain}
-              setValue={setIsSustain}
+              setValue={(value) => {
+                setIsSustain(value);
+                socket.emit("send-sustain-toggle", {
+                  isSustain: value,
+                });
+              }}
               label="Sustain"
               alignItems="center"
+              isDisabled={isReceiveMode}
             />
 
             <Flex
@@ -235,11 +252,7 @@ export default function Home() {
           </Flex>
         </Flex>
         <Piano
-          playedNotes={
-            // !isReceiveMode ?
-            playedNotes
-            // : receivedNotes
-          }
+          playedNotes={playedNotes}
           showLabel={showLabel}
           socket={socket}
         />

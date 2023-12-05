@@ -14,4 +14,10 @@ io.on("connection", (socket) => {
   socket.on("send-lifted-notes", (obj) => {
     io.emit("receive-lifted-notes", obj);
   });
+  socket.on("request-sustain-toggle", () => {
+    io.emit("ask-sustain-toggle");
+  });
+  socket.on("send-sustain-toggle", (obj) => {
+    io.emit("receive-sustain-toggle", obj);
+  });
 });
