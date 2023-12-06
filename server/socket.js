@@ -8,16 +8,17 @@ const io = new Server(4000, {
 
 io.on("connection", (socket) => {
   console.log(`Socket ${socket.id} connected.`);
+
   socket.on("send-played-notes", (obj) => {
-    io.emit("receive-played-notes", obj);
+    socket.broadcast.emit("receive-played-notes", obj);
   });
   socket.on("send-lifted-notes", (obj) => {
-    io.emit("receive-lifted-notes", obj);
+    socket.broadcast.emit("receive-lifted-notes", obj);
   });
   socket.on("request-sustain-toggle", () => {
-    io.emit("ask-sustain-toggle");
+    socket.broadcast.emit("ask-sustain-toggle");
   });
   socket.on("send-sustain-toggle", (obj) => {
-    io.emit("receive-sustain-toggle", obj);
+    socket.broadcast.emit("receive-sustain-toggle", obj);
   });
 });
