@@ -1,24 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { FormEventHandler, useEffect, useMemo, useRef, useState } from "react";
 import "./page.scss";
 import { WebMidi } from "webmidi";
 import _ from "lodash";
 import Piano from "../components/Piano/Piano";
-import { Flex, Label, Select } from "@hover-design/react";
+import { Flex, Input, Label, Select } from "@hover-design/react";
 import Switch from "../components/Switch/Switch";
 import { io } from "socket.io-client";
 import { Socket } from "socket.io-client";
 import { usePianoSound } from "@/hooks/usePianoSound";
 import { pianoNotes } from "@/utils/pianoNotes";
 import { INote, NoteEvent } from "@/types/global.types";
+import { Button } from "@/components/Button/Button";
 
 interface IOptions {
   label: string;
   value: string;
 }
 
-let socket: Socket;
+let socket: Socket | null;
 
 export default function Home() {
   const [midiOptions, setMidiOptions] = useState<IOptions[]>([]);
@@ -29,9 +30,12 @@ export default function Home() {
   const [playedNotes, setPlayedNotes] = useState<INote[]>([]);
   const [showLabel, setShowLabel] = useState(false);
   const [isReceiveMode, setIsReceiveMode] = useState(false);
+  const [isBroadcastMode, setIsBroadcastMode] = useState(false);
   const [isMute, setIsMute] = useState(false);
   const [isSustain, setIsSustain] = useState(false);
+  const [showConnectionIdInput, setShowConnectionIdInput] = useState(false);
   const [liftedNotes, setLiftedNotes] = useState<string[]>(pianoNotes);
+  const [connectionId, setConnectionId] = useState("");
 
   const notesPlay = usePianoSound();
 
@@ -56,41 +60,108 @@ export default function Home() {
         setMidiOptions(midiOptionsData);
       })
       .catch((err) => console.log(err));
+
+    return () => {
+      socket?.disconnect();
+    };
   }, []);
 
-  const initializeSocket = async () => {
+  const initializeSocket = async (isBroadcast = false) => {
     socket = io("http://localhost:4000");
+    socket?.on("connect", () => {
+      if (isBroadcast) {
+        socket?.emit(
+          "join-room",
+          { room: `p-${socket?.id}`, isBroadcaster: true },
+          (room: string, errMsg: string) => {
+            if (!errMsg) {
+              setIsBroadcastMode(true);
+              setConnectionId(room);
+            } else {
+              window.alert(errMsg);
+              disconnectSocket();
+            }
+          }
+        );
+      } else setShowConnectionIdInput(true);
+    });
+  };
+
+  const broadcastData = () => {
+    disconnectSocket();
+    initializeSocket(true);
+  };
+
+  const disconnectSocket = () => {
+    socket?.disconnect();
+    setIsBroadcastMode(false);
+    setIsReceiveMode(false);
+    setShowConnectionIdInput(false);
+  };
+
+  const recieveSocketData = () => {
+    if (!socket) return;
+    socket?.on("receive-played-notes", (message: { playedNotes: INote[] }) => {
+      setPlayedNotes(message?.playedNotes);
+    });
+    socket?.on("receive-lifted-notes", (message: { liftedNotes: string[] }) => {
+      setLiftedNotes(message?.liftedNotes);
+    });
+    socket?.emit("request-sustain-toggle", null, connectionId);
+
+    socket?.on("receive-sustain-toggle", (message: { isSustain: boolean }) => {
+      setIsSustain(message?.isSustain);
+    });
+  };
+
+  const openRecievingInput = () => {
+    disconnectSocket();
+    initializeSocket();
+    setConnectionId("");
+    setShowConnectionIdInput(true);
+  };
+
+  const copyConnectionId = () => {
+    navigator.clipboard
+      .writeText(connectionId)
+      .then(() => {
+        window.alert("Id Copied!");
+      })
+      .catch((err) => {
+        console.error("Error copying text to clipboard:", err);
+      });
+  };
+
+  const connectToId: FormEventHandler<HTMLFormElement> = (e) => {
+    e.preventDefault();
+    socket?.emit(
+      "join-room",
+      { room: connectionId, isBroadcaster: false },
+      (room: string, errMsg: string) => {
+        if (!errMsg) {
+          setIsReceiveMode(true);
+          setIsBroadcastMode(false);
+          setConnectionId(room);
+          recieveSocketData();
+        } else {
+          window.alert(errMsg);
+          disconnectSocket();
+        }
+      }
+    );
   };
 
   useEffect(() => {
-    initializeSocket();
-    if (isReceiveMode) {
-      socket.on("receive-played-notes", (message: { playedNotes: INote[] }) => {
-        setPlayedNotes(message?.playedNotes);
-      });
-      socket.on(
-        "receive-lifted-notes",
-        (message: { liftedNotes: string[] }) => {
-          setLiftedNotes(message?.liftedNotes);
-        }
-      );
-      socket.emit("request-sustain-toggle");
-
-      socket.on("receive-sustain-toggle", (message: { isSustain: boolean }) => {
-        setIsSustain(message?.isSustain);
-      });
-    } else {
-      socket.on("ask-sustain-toggle", () => {
-        socket.emit("send-sustain-toggle", {
+    socket?.on("ask-sustain-toggle", () => {
+      socket?.emit(
+        "send-sustain-toggle",
+        {
           isSustain,
-        });
-      });
-    }
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [isReceiveMode, isSustain]);
+        },
+        connectionId
+      );
+    });
+  }, [socket, isSustain, isBroadcastMode]);
 
   useEffect(() => {
     if (inputRef.current !== myInput?.name) {
@@ -106,9 +177,14 @@ export default function Home() {
       ? myInput?.addListener("noteon", (e: NoteEvent) => {
           setLiftedNotes((prev) => {
             const notes = prev.filter((notes) => notes !== e.note.identifier);
-            socket.emit("send-lifted-notes", {
-              liftedNotes: notes,
-            });
+            isBroadcastMode &&
+              socket?.emit(
+                "send-lifted-notes",
+                {
+                  liftedNotes: notes,
+                },
+                connectionId
+              );
             return notes;
           });
           setPlayedNotes((prev) => {
@@ -116,9 +192,14 @@ export default function Home() {
               ...prev,
               { note: e.note.identifier, velocity: e.rawVelocity as number },
             ]);
-            socket.emit("send-played-notes", {
-              playedNotes: notes,
-            });
+            isBroadcastMode &&
+              socket?.emit(
+                "send-played-notes",
+                {
+                  playedNotes: notes,
+                },
+                connectionId
+              );
             playNoteAudio(notes);
             return notes;
           });
@@ -129,9 +210,14 @@ export default function Home() {
       ? myInput?.addListener("noteoff", (e) => {
           setLiftedNotes((prev) => {
             const notes = _.uniq([...prev, e.note.identifier]);
-            socket.emit("send-lifted-notes", {
-              liftedNotes: notes,
-            });
+            isBroadcastMode &&
+              socket?.emit(
+                "send-lifted-notes",
+                {
+                  liftedNotes: notes,
+                },
+                connectionId
+              );
             stopNoteAudio(notes);
             return notes;
           });
@@ -139,9 +225,14 @@ export default function Home() {
             const notes = prev.filter(
               (notes) => notes.note !== e.note.identifier
             );
-            socket.emit("send-played-notes", {
-              playedNotes: notes,
-            });
+            isBroadcastMode &&
+              socket?.emit(
+                "send-played-notes",
+                {
+                  playedNotes: notes,
+                },
+                connectionId
+              );
             return notes;
           });
         })
@@ -152,7 +243,7 @@ export default function Home() {
 
       myInput?.removeListener("noteoff");
     };
-  }, [myInput, isReceiveMode, liftedNotes, isMute, isSustain]);
+  }, [myInput, isReceiveMode, isBroadcastMode, liftedNotes, isMute, isSustain]);
 
   useEffect(() => {
     isReceiveMode && playNoteAudio(playedNotes);
@@ -189,22 +280,17 @@ export default function Home() {
     <Flex className={"main"} alignItems="center">
       <Flex
         flexDirection="column"
-        justifyContent="center"
         className="piano-container"
+        alignItems="center"
       >
         <h1>THE PIANO</h1>
-        <Flex
-          className="piano-controls-container"
-          alignItems="center"
-          justifyContent="flex-end"
-        >
-          <Flex className="piano-controls" flexBasis="30%" gap="20px">
-            <Switch
-              value={isReceiveMode}
-              setValue={setIsReceiveMode}
-              label="Broadcast > Recieve"
-              alignItems="flex-end"
-            />
+        <Flex className="piano-controls-container" justifyContent="center">
+          <Flex
+            className="piano-controls"
+            flexWrap={"wrap"}
+            justifyContent="space-between"
+            gap="20px"
+          >
             <Switch
               value={isMute}
               setValue={setIsMute}
@@ -215,23 +301,24 @@ export default function Home() {
               value={isSustain}
               setValue={(value) => {
                 setIsSustain(value);
-                socket.emit("send-sustain-toggle", {
-                  isSustain: value,
-                });
+                isBroadcastMode &&
+                  socket?.emit(
+                    "send-sustain-toggle",
+                    {
+                      isSustain: value,
+                    },
+                    connectionId
+                  );
               }}
               label="Sustain"
               alignItems="center"
               isDisabled={isReceiveMode}
             />
-
-            <Flex
-              className="midi-selector"
-              flexDirection="column"
-              alignItems="center"
-              gap="7px"
-            >
+            <Switch value={showLabel} setValue={setShowLabel} label="Notes" />
+            <Flex className="midi-selector" flexDirection="column" gap="7px">
               <Label htmlFor="midi-selector">Select MIDI Input</Label>
               <Select
+                placeholder="Select MIDI Input"
                 borderRadius="20px"
                 color="#6c584c"
                 id="midi-selector"
@@ -244,18 +331,66 @@ export default function Home() {
                 isClearable
               />
             </Flex>
-            <Switch
-              value={showLabel}
-              setValue={setShowLabel}
-              label="Show Notes"
-            />
           </Flex>
         </Flex>
-        <Piano
-          playedNotes={playedNotes}
-          showLabel={showLabel}
-          socket={socket}
-        />
+        <Piano playedNotes={playedNotes} showLabel={showLabel} />
+        <Flex
+          className="streaming-controls-container"
+          flexDirection="column"
+          alignItems="center"
+          gap="20px"
+        >
+          <Flex
+            className="streaming-controls"
+            justifyContent="center"
+            gap="20px"
+          >
+            <Button
+              onClose={disconnectSocket}
+              onClick={broadcastData}
+              isActive={isBroadcastMode}
+            >
+              Broadcast
+            </Button>
+            <Button
+              onClose={disconnectSocket}
+              onClick={openRecievingInput}
+              isActive={isReceiveMode || showConnectionIdInput}
+            >
+              Recieve
+            </Button>
+          </Flex>
+          {showConnectionIdInput && (
+            <form id="connection-form" onSubmit={connectToId}>
+              <Flex
+                className="connection-input-container"
+                justifyContent="center"
+                gap="20px"
+              >
+                <Input
+                  className="connection-input"
+                  placeholder="Enter a Connection ID"
+                  crossOrigin={"anonymus"}
+                  value={connectionId}
+                  onChange={(e) => setConnectionId(e.target.value)}
+                />
+                <Button disabled={!connectionId} form="connection-form">
+                  Connect
+                </Button>
+              </Flex>
+            </form>
+          )}
+          {(isBroadcastMode || isReceiveMode) && (
+            <Flex className="connection-msg" alignItems="center" gap="10px">
+              <p>
+                <span>Connection Id :</span> {connectionId}
+              </p>
+              <Button className="copy-btn" onClick={copyConnectionId}>
+                COPY
+              </Button>
+            </Flex>
+          )}
+        </Flex>
       </Flex>
     </Flex>
   );

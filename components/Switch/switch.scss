@@ -9,6 +9,15 @@
     }
   }
 
+  #label-switch:disabled + span {
+    background: $accentColorLight;
+    border: 1px solid $accentColorDark;
+    &::before {
+      background: $accentColorDark;
+    }
+    cursor: not-allowed;
+  }
+
   span {
     border: 1px solid $accentColorDark;
     &::before {

@@ -1,25 +1,26 @@
-@import "../theme/colors.scss";
-@import url("https://fonts.googleapis.com/css2?family=Montserrat&family=Montserrat+Subrayada:wght@700&display=swap");
+@import "@/theme/colors.scss";
+@import url("https://fonts.googleapis.com/css2?family=Montserrat+Subrayada:wght@700&family=Montserrat:wght@400;500;600;700&display=swap");
 .main {
   height: 100vh;
-  padding: 10px 20px;
+  padding: 20px;
   background: $backgroundColor;
   font-family: "Montserrat", sans-serif;
+  overflow-y: scroll;
 
-  h1 {
-    color: $accentColorDark;
-    font-size: 7vw;
-    font-weight: 500;
-    letter-spacing: 2%;
-    font-family: "Montserrat Subrayada", sans-serif;
-  }
   .piano-container {
     width: 100%;
-    margin-top: -5vw;
+
+    h1 {
+      color: $accentColorDark;
+      font-size: 100px;
+      text-align: center;
+      font-weight: 500;
+      letter-spacing: 2%;
+      font-family: "Montserrat Subrayada", sans-serif;
+    }
 
     .piano-controls-container {
-      margin-bottom: 20px;
-      margin-top: 50px;
+      margin: 50px 0;
       width: 100%;
       color: $accentColorDark;
 
@@ -28,16 +29,86 @@
       }
 
       .midi-selector {
-        width: 250px;
+        width: 300px;
+        label {
+          visibility: hidden;
+        }
+
         [role="combobox"] div:first-child {
-          color: $hightlightColorDark;
-          div {
+          color: $accentColorDark;
+          & > div {
             color: $hightlightColorDark;
           }
         }
         [role="option"][data-hover="true"] {
           background-color: $hightlightColorLight;
           color: $accentColorDark;
+        }
+      }
+    }
+
+    .streaming-controls-container {
+      width: 100%;
+      max-width: 569px;
+      margin: 50px auto 0 auto;
+      .streaming-controls {
+        width: 100%;
+        color: $accentColorDark;
+
+        .button {
+          flex: 1;
+        }
+      }
+      #connection-form {
+        width: 100%;
+        .connection-input-container {
+          width: 100%;
+          align-items: stretch;
+          & > div {
+            flex: 4;
+            input {
+              width: 100%;
+              border-radius: 1000px;
+              color: $accentColorDark;
+              border: 2px solid $hightlightColorLight;
+
+              &::placeholder {
+                color: $hightlightColorDark;
+              }
+              &:focus {
+                outline: none;
+                border: 2px solid $accentColorDark;
+              }
+            }
+          }
+
+          .button {
+            flex: 1;
+          }
+        }
+      }
+
+      .connection-msg {
+        color: $accentColorDark;
+        p {
+          line-height: 150%;
+          span {
+            font-weight: 900;
+          }
+        }
+        .copy-btn {
+          button {
+            padding: 5px 8px;
+            font-size: 12px;
+            background: $accentColorLight;
+            color: white;
+            border: 2px solid $accentColorLight;
+            &:hover {
+              background: $hightlightColorDark;
+              color: white;
+              border: 2px solid $hightlightColorDark;
+            }
+          }
         }
       }
     }
