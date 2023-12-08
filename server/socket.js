@@ -27,7 +27,7 @@ io.on("connection", (socket) => {
 
     if (isBroadcaster) {
       if (rooms.has(room)) {
-        callback(room, `${room} already broadcasting!`);
+        callback(room, `This Broadcaster already exists!`);
       } else {
         socket.join(room);
         callback(room);
@@ -37,7 +37,7 @@ io.on("connection", (socket) => {
         socket.join(room);
         callback(room);
       } else {
-        callback(room, `${room} doesn't exist!`);
+        callback(room, `Broadcaster doesn't exist!`);
       }
     }
   });

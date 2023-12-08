@@ -13,6 +13,7 @@ import { usePianoSound } from "@/hooks/usePianoSound";
 import { pianoNotes } from "@/utils/pianoNotes";
 import { INote, NoteEvent } from "@/types/global.types";
 import { Button } from "@/components/Button/Button";
+import toast, { Toaster } from "react-hot-toast";
 
 interface IOptions {
   label: string;
@@ -36,6 +37,7 @@ export default function Home() {
   const [showConnectionIdInput, setShowConnectionIdInput] = useState(false);
   const [liftedNotes, setLiftedNotes] = useState<string[]>(pianoNotes);
   const [connectionId, setConnectionId] = useState("");
+  const [inputId, setInputId] = useState("");
 
   const notesPlay = usePianoSound();
 
@@ -77,8 +79,9 @@ export default function Home() {
             if (!errMsg) {
               setIsBroadcastMode(true);
               setConnectionId(room);
+              toast.success("Broadcast Started Successfully");
             } else {
-              window.alert(errMsg);
+              toast.error(errMsg);
               disconnectSocket();
             }
           }
@@ -99,7 +102,7 @@ export default function Home() {
     setShowConnectionIdInput(false);
   };
 
-  const recieveSocketData = () => {
+  const recieveSocketData = (room: string) => {
     if (!socket) return;
     socket?.on("receive-played-notes", (message: { playedNotes: INote[] }) => {
       setPlayedNotes(message?.playedNotes);
@@ -107,7 +110,7 @@ export default function Home() {
     socket?.on("receive-lifted-notes", (message: { liftedNotes: string[] }) => {
       setLiftedNotes(message?.liftedNotes);
     });
-    socket?.emit("request-sustain-toggle", null, connectionId);
+    socket?.emit("request-sustain-toggle", null, room);
 
     socket?.on("receive-sustain-toggle", (message: { isSustain: boolean }) => {
       setIsSustain(message?.isSustain);
@@ -125,10 +128,10 @@ export default function Home() {
     navigator.clipboard
       .writeText(connectionId)
       .then(() => {
-        window.alert("Id Copied!");
+        toast.success("Connection ID copied to clipboard");
       })
       .catch((err) => {
-        console.error("Error copying text to clipboard:", err);
+        toast.error("Error copying text to clipboard:", err);
       });
   };
 
@@ -136,15 +139,16 @@ export default function Home() {
     e.preventDefault();
     socket?.emit(
       "join-room",
-      { room: connectionId, isBroadcaster: false },
+      { room: inputId, isBroadcaster: false },
       (room: string, errMsg: string) => {
         if (!errMsg) {
           setIsReceiveMode(true);
           setIsBroadcastMode(false);
           setConnectionId(room);
-          recieveSocketData();
+          recieveSocketData(room);
+          toast.success(`Connected To Broadcaster Successfully`);
         } else {
-          window.alert(errMsg);
+          toast.error(errMsg);
           disconnectSocket();
         }
       }
@@ -371,10 +375,10 @@ export default function Home() {
                   className="connection-input"
                   placeholder="Enter a Connection ID"
                   crossOrigin={"anonymus"}
-                  value={connectionId}
-                  onChange={(e) => setConnectionId(e.target.value)}
+                  value={inputId}
+                  onChange={(e) => setInputId(e.target.value)}
                 />
-                <Button disabled={!connectionId} form="connection-form">
+                <Button disabled={!inputId} form="connection-form">
                   Connect
                 </Button>
               </Flex>
@@ -392,6 +396,7 @@ export default function Home() {
           )}
         </Flex>
       </Flex>
+      <Toaster />
     </Flex>
   );
 }
