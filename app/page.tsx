@@ -86,6 +86,7 @@ export default function Home() {
   };
 
   const initializeSocket = async (isBroadcast = false) => {
+    if (socket?.id) disconnectSocket();
     socket = io("http://localhost:4000");
     socket?.on("connect", () => {
       if (isBroadcast) {
@@ -97,17 +98,15 @@ export default function Home() {
   const broadcastData = () => {
     setIsReceiveMode(false);
     setShowConnectionIdInput(false);
-    if (socket?.id) {
-      joinRoom();
-    } else initializeSocket(true);
+    initializeSocket(true);
   };
 
   const disconnectSocket = () => {
-    isBroadcastMode && socket?.emit("disconnect-broadcast", null, connectionId);
     socket?.disconnect();
   };
 
   const disconnectBroadcast = () => {
+    socket?.emit("disconnect-broadcast", connectionId);
     setIsBroadcastMode(false);
     disconnectSocket();
   };
@@ -122,18 +121,19 @@ export default function Home() {
 
   const recieveSocketData = (room: string) => {
     if (!socket) return;
-    socket?.on("receive-played-notes", (message: { playedNotes: INote[] }) => {
+    socket.on("receive-played-notes", (message: { playedNotes: INote[] }) => {
       setPlayedNotes(message?.playedNotes);
     });
-    socket?.on("receive-lifted-notes", (message: { liftedNotes: string[] }) => {
+    socket.on("receive-lifted-notes", (message: { liftedNotes: string[] }) => {
       setLiftedNotes(message?.liftedNotes);
     });
-    socket?.emit("request-sustain-toggle", null, room);
-    socket?.on("receive-sustain-toggle", (message: { isSustain: boolean }) => {
+    socket.emit("request-sustain-toggle", room);
+    socket.on("receive-sustain-toggle", (message: { isSustain: boolean }) => {
       setIsSustain(message?.isSustain);
     });
-    socket?.on("receive-disconnect-broadcast", () => {
+    socket.on("receive-disconnect-broadcast", () => {
       toast.error("Broadcaster Disconnected!");
+      initializeSocket();
       setIsReceiveMode(false);
       setInputId("");
     });
@@ -141,8 +141,9 @@ export default function Home() {
 
   const openRecievingInput = () => {
     if (socket?.id) {
-      setShowConnectionIdInput(true);
-    } else initializeSocket();
+      socket?.emit("disconnect-broadcast", connectionId);
+    }
+    initializeSocket();
     setConnectionId("");
     setInputId("");
     setShowConnectionIdInput(true);
@@ -158,6 +159,12 @@ export default function Home() {
       .catch((err) => {
         toast.error("Error copying text to clipboard:", err);
       });
+  };
+
+  const pasteConnectionId = () => {
+    navigator.clipboard.readText().then((res) => {
+      setInputId(res);
+    });
   };
 
   const connectToId: FormEventHandler<HTMLFormElement> = (e) => {
@@ -403,9 +410,17 @@ export default function Home() {
                   value={inputId}
                   onChange={(e) => setInputId(e.target.value)}
                 />
-                <Button disabled={!inputId} form="connection-form">
-                  Connect
-                </Button>
+                {inputId ? (
+                  <Button
+                    type="submit"
+                    disabled={!inputId}
+                    form="connection-form"
+                  >
+                    Connect
+                  </Button>
+                ) : (
+                  <Button onClick={pasteConnectionId}>Paste</Button>
+                )}
               </Flex>
             </form>
           )}

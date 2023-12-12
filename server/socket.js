@@ -15,11 +15,15 @@ io.on("connection", (socket) => {
   socket.on("send-lifted-notes", (obj, room) => {
     socket.to(room).emit("receive-lifted-notes", obj);
   });
-  socket.on("request-sustain-toggle", (obj, room) => {
+  socket.on("request-sustain-toggle", (room) => {
     socket.to(room).emit("ask-sustain-toggle");
   });
   socket.on("send-sustain-toggle", (obj, room) => {
     socket.to(room).emit("receive-sustain-toggle", obj);
+  });
+
+  socket.on("disconnect-broadcast", (room) => {
+    socket.to(room).emit("receive-disconnect-broadcast");
   });
 
   socket.on("join-room", ({ room, isBroadcaster }, callback) => {
