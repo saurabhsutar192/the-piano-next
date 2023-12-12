@@ -6,6 +6,7 @@ type IButton = {
   className?: string;
   isActive?: boolean;
   onClose?: () => void;
+  onClick?: () => void;
 } & JSX.IntrinsicElements["button"];
 
 export const Button = ({
@@ -13,11 +14,16 @@ export const Button = ({
   isActive,
   className,
   onClose,
+  onClick,
   ...props
 }: IButton) => {
   return (
     <div className={`button ${className}`}>
-      <button {...props} className={`button-element ${isActive && "active"} `}>
+      <button
+        {...props}
+        onClick={() => !isActive && onClick && onClick()}
+        className={`button-element ${isActive && "active"} `}
+      >
         {children}
       </button>
       {isActive && onClose && (
