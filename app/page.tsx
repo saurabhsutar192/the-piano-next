@@ -68,38 +68,56 @@ export default function Home() {
     };
   }, []);
 
+  const joinRoom = () => {
+    socket?.emit(
+      "join-room",
+      { room: `p-${socket?.id}`, isBroadcaster: true },
+      (room: string, errMsg: string) => {
+        if (!errMsg) {
+          setIsBroadcastMode(true);
+          setConnectionId(room);
+          toast.success("Broadcast Started Successfully");
+        } else {
+          toast.error(errMsg);
+          disconnectSocket();
+        }
+      }
+    );
+  };
+
   const initializeSocket = async (isBroadcast = false) => {
     socket = io("http://localhost:4000");
     socket?.on("connect", () => {
       if (isBroadcast) {
-        socket?.emit(
-          "join-room",
-          { room: `p-${socket?.id}`, isBroadcaster: true },
-          (room: string, errMsg: string) => {
-            if (!errMsg) {
-              setIsBroadcastMode(true);
-              setConnectionId(room);
-              toast.success("Broadcast Started Successfully");
-            } else {
-              toast.error(errMsg);
-              disconnectSocket();
-            }
-          }
-        );
+        joinRoom();
       } else setShowConnectionIdInput(true);
     });
   };
 
   const broadcastData = () => {
-    disconnectSocket();
-    initializeSocket(true);
+    setIsReceiveMode(false);
+    setShowConnectionIdInput(false);
+    if (socket?.id) {
+      joinRoom();
+    } else initializeSocket(true);
   };
 
   const disconnectSocket = () => {
+    isBroadcastMode && socket?.emit("disconnect-broadcast", null, connectionId);
     socket?.disconnect();
+  };
+
+  const disconnectBroadcast = () => {
     setIsBroadcastMode(false);
+    disconnectSocket();
+  };
+
+  const disconnectReceive = () => {
     setIsReceiveMode(false);
     setShowConnectionIdInput(false);
+    setInputId("");
+    setConnectionId("");
+    disconnectSocket();
   };
 
   const recieveSocketData = (room: string) => {
@@ -111,17 +129,24 @@ export default function Home() {
       setLiftedNotes(message?.liftedNotes);
     });
     socket?.emit("request-sustain-toggle", null, room);
-
     socket?.on("receive-sustain-toggle", (message: { isSustain: boolean }) => {
       setIsSustain(message?.isSustain);
+    });
+    socket?.on("receive-disconnect-broadcast", () => {
+      toast.error("Broadcaster Disconnected!");
+      setIsReceiveMode(false);
+      setInputId("");
     });
   };
 
   const openRecievingInput = () => {
-    disconnectSocket();
-    initializeSocket();
+    if (socket?.id) {
+      setShowConnectionIdInput(true);
+    } else initializeSocket();
     setConnectionId("");
+    setInputId("");
     setShowConnectionIdInput(true);
+    setIsBroadcastMode(false);
   };
 
   const copyConnectionId = () => {
@@ -350,14 +375,14 @@ export default function Home() {
             gap="20px"
           >
             <Button
-              onClose={disconnectSocket}
+              onClose={disconnectBroadcast}
               onClick={broadcastData}
               isActive={isBroadcastMode}
             >
               Broadcast
             </Button>
             <Button
-              onClose={disconnectSocket}
+              onClose={disconnectReceive}
               onClick={openRecievingInput}
               isActive={isReceiveMode || showConnectionIdInput}
             >
