@@ -8,7 +8,7 @@ export const pianoNotes = noteNames
         if (i === 0) {
           if (note === "A" || note === "B") {
             noteSet.push(`${note}${i}`);
-            if (!(note === "B")) {
+            if (note !== "B") {
               noteSet.push(`${note}#${i}`);
             }
           }
