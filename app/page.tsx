@@ -89,8 +89,11 @@ export default function Home() {
 
   const initializeSocket = async (isBroadcast = false) => {
     if (socket?.id) disconnectSocket();
-    socket = io(process.env.NEXT_PUBLIC_SOCKET || "wa", {
+    const path = "/api/socket/io";
+    socket = io(process.env.NEXT_PUBLIC_URL || "", {
       reconnection: false,
+      path,
+      addTrailingSlash: false,
     });
     socket?.on("connect", () => {
       if (isBroadcast) {
