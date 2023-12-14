@@ -4,14 +4,18 @@
   height: 100vh;
   padding: 20px;
   background: $backgroundColor;
-  font-family: "Montserrat", sans-serif;
+
   overflow-y: scroll;
+  color: $accentColorDark;
+
+  * {
+    font-family: "Montserrat", sans-serif;
+  }
 
   .piano-container {
     width: 100%;
 
     h1 {
-      color: $accentColorDark;
       font-size: 100px;
       text-align: center;
       font-weight: 500;
@@ -22,7 +26,6 @@
     .piano-controls-container {
       margin: 50px 0;
       width: 100%;
-      color: $accentColorDark;
 
       label {
         white-space: nowrap;
@@ -35,14 +38,13 @@
         }
 
         [role="combobox"] div:first-child {
-          color: $accentColorDark;
           & > div {
             color: $hightlightColorDark;
           }
         }
         [role="option"][data-hover="true"] {
-          background-color: $hightlightColorLight;
-          color: $accentColorDark;
+          background-color: $hightlightColorDark;
+          color: white;
         }
       }
     }
@@ -53,7 +55,6 @@
       margin: 50px auto 0 auto;
       .streaming-controls {
         width: 100%;
-        color: $accentColorDark;
 
         .button {
           flex: 1;
@@ -69,7 +70,6 @@
             input {
               width: 100%;
               border-radius: 1000px;
-              color: $accentColorDark;
               border: 2px solid $hightlightColorLight;
 
               &::placeholder {
@@ -89,7 +89,6 @@
       }
 
       .connection-msg {
-        color: $accentColorDark;
         p {
           line-height: 150%;
           span {
