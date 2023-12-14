@@ -19,7 +19,7 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIo) => {
   const path = "/api/socket/io";
   const httpServer: NetServer = res.socket.server as any;
   const io = new ServerIO(httpServer, {
-    path: path,
+    path,
     // @ts-ignore
     addTrailingSlash: false,
   });
@@ -29,20 +29,19 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIo) => {
   io.on("connection", (socket) => {
     console.log(`Socket ${socket.id} connected.`);
 
+    let broadcastRoom = "";
+
     socket.on("send-played-notes", (obj, room) => {
       socket.to(room).emit("receive-played-notes", obj);
     });
     socket.on("send-lifted-notes", (obj, room) => {
       socket.to(room).emit("receive-lifted-notes", obj);
     });
-    socket.on("request-sustain-toggle", (obj, room) => {
+    socket.on("request-sustain-toggle", (room) => {
       socket.to(room).emit("ask-sustain-toggle");
     });
     socket.on("send-sustain-toggle", (obj, room) => {
       socket.to(room).emit("receive-sustain-toggle", obj);
-    });
-    socket.on("disconnect-broadcast", (obj, room) => {
-      socket.to(room).emit("receive-disconnect-broadcast");
     });
 
     socket.on("join-room", ({ room, isBroadcaster }, callback) => {
@@ -53,6 +52,7 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIo) => {
           callback(room, `This Broadcaster already exists!`);
         } else {
           socket.join(room);
+          broadcastRoom = room;
           callback(room);
         }
       } else {
@@ -62,6 +62,13 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIo) => {
         } else {
           callback(room, `Broadcaster doesn't exist!`);
         }
+      }
+    });
+
+    socket.on("disconnect", () => {
+      console.log("disconnected ", socket.id);
+      if (`p-${socket.id}` === broadcastRoom) {
+        socket.to(broadcastRoom).emit("receive-disconnect-broadcast");
       }
     });
   });

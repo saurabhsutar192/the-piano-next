@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import "./button.scss";
+import { Loader } from "@hover-design/react";
 
 type IButton = {
   children: ReactNode;
@@ -7,6 +8,7 @@ type IButton = {
   isActive?: boolean;
   onClose?: () => void;
   onClick?: () => void;
+  isLoading?: boolean;
 } & JSX.IntrinsicElements["button"];
 
 export const Button = ({
@@ -15,19 +17,26 @@ export const Button = ({
   className,
   onClose,
   onClick,
+  isLoading = false,
   ...props
 }: IButton) => {
   return (
     <div className={`button ${className}`}>
       <button
+        type="button"
         {...props}
         onClick={() => !isActive && onClick && onClick()}
         className={`button-element ${isActive && "active"} `}
       >
-        {children}
+        {children}{" "}
+        {isLoading && (
+          <span>
+            <Loader color="#6c584c" dashLength={50} height={"10px"} />
+          </span>
+        )}
       </button>
       {isActive && onClose && (
-        <button className="close-button" onClick={onClose}>
+        <button className="close-button" onClick={onClose} type="button">
           x
         </button>
       )}

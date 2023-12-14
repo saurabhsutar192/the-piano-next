@@ -38,6 +38,8 @@ export default function Home() {
   const [liftedNotes, setLiftedNotes] = useState<string[]>(pianoNotes);
   const [connectionId, setConnectionId] = useState("");
   const [inputId, setInputId] = useState("");
+  const [isBroadcastLoading, setIsBroadcastLoading] = useState(false);
+  const [isReceiveLoading, setIsReceiveLoading] = useState(false);
 
   const notesPlay = usePianoSound();
 
@@ -64,7 +66,7 @@ export default function Home() {
       .catch((err) => console.log(err));
 
     return () => {
-      socket?.disconnect();
+      disconnectSocket();
     };
   }, []);
 
@@ -86,27 +88,35 @@ export default function Home() {
   };
 
   const initializeSocket = async (isBroadcast = false) => {
-    socket = io(process.env.NEXT_PUBLIC_SITE_URL as string, {
-      path: "/api/socket/io",
+    if (socket?.id) disconnectSocket();
+    const path = "/api/socket/io";
+    socket = io(process.env.NEXT_PUBLIC_URL || "", {
+      reconnection: false,
+      path,
       addTrailingSlash: false,
     });
     socket?.on("connect", () => {
       if (isBroadcast) {
         joinRoom();
       } else setShowConnectionIdInput(true);
+      setIsBroadcastLoading(false);
+      setIsReceiveLoading(false);
+    });
+    socket?.on("connect_error", () => {
+      toast.error("Something Went Wrong!");
+      setIsBroadcastLoading(false);
+      setIsReceiveLoading(false);
     });
   };
 
   const broadcastData = () => {
+    setIsBroadcastLoading(true);
     setIsReceiveMode(false);
     setShowConnectionIdInput(false);
-    if (socket?.id) {
-      joinRoom();
-    } else initializeSocket(true);
+    initializeSocket(true);
   };
 
   const disconnectSocket = () => {
-    isBroadcastMode && socket?.emit("disconnect-broadcast", null, connectionId);
     socket?.disconnect();
   };
 
@@ -125,27 +135,26 @@ export default function Home() {
 
   const recieveSocketData = (room: string) => {
     if (!socket) return;
-    socket?.on("receive-played-notes", (message: { playedNotes: INote[] }) => {
+    socket.on("receive-played-notes", (message: { playedNotes: INote[] }) => {
       setPlayedNotes(message?.playedNotes);
     });
-    socket?.on("receive-lifted-notes", (message: { liftedNotes: string[] }) => {
+    socket.on("receive-lifted-notes", (message: { liftedNotes: string[] }) => {
       setLiftedNotes(message?.liftedNotes);
     });
-    socket?.emit("request-sustain-toggle", null, room);
-    socket?.on("receive-sustain-toggle", (message: { isSustain: boolean }) => {
+    socket.emit("request-sustain-toggle", room);
+    socket.on("receive-sustain-toggle", (message: { isSustain: boolean }) => {
       setIsSustain(message?.isSustain);
     });
-    socket?.on("receive-disconnect-broadcast", () => {
+    socket.on("receive-disconnect-broadcast", () => {
       toast.error("Broadcaster Disconnected!");
+      initializeSocket();
       setIsReceiveMode(false);
       setInputId("");
     });
   };
 
   const openRecievingInput = () => {
-    if (socket?.id) {
-      setShowConnectionIdInput(true);
-    } else initializeSocket();
+    initializeSocket();
     setConnectionId("");
     setInputId("");
     setShowConnectionIdInput(true);
@@ -163,24 +172,35 @@ export default function Home() {
       });
   };
 
+  const pasteConnectionId = () => {
+    navigator.clipboard.readText().then((res) => {
+      setInputId(res);
+    });
+  };
+
   const connectToId: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
-    socket?.emit(
-      "join-room",
-      { room: inputId, isBroadcaster: false },
-      (room: string, errMsg: string) => {
-        if (!errMsg) {
-          setIsReceiveMode(true);
-          setIsBroadcastMode(false);
-          setConnectionId(room);
-          recieveSocketData(room);
-          toast.success(`Connected To Broadcaster Successfully`);
-        } else {
-          toast.error(errMsg);
-          disconnectSocket();
+    if (inputId === connectionId) {
+      toast.success("Already connected to the broadcaster!");
+    } else {
+      setIsReceiveLoading(true);
+      socket?.emit(
+        "join-room",
+        { room: inputId, isBroadcaster: false },
+        (room: string, errMsg: string) => {
+          if (!errMsg) {
+            setIsReceiveMode(true);
+            setIsBroadcastMode(false);
+            setConnectionId(room);
+            recieveSocketData(room);
+            toast.success(`Connected To Broadcaster Successfully`);
+          } else {
+            toast.error(errMsg);
+          }
+          setIsReceiveLoading(false);
         }
-      }
-    );
+      );
+    }
   };
 
   useEffect(() => {
@@ -381,6 +401,7 @@ export default function Home() {
               onClose={disconnectBroadcast}
               onClick={broadcastData}
               isActive={isBroadcastMode}
+              isLoading={isBroadcastLoading}
             >
               Broadcast
             </Button>
@@ -388,6 +409,7 @@ export default function Home() {
               onClose={disconnectReceive}
               onClick={openRecievingInput}
               isActive={isReceiveMode || showConnectionIdInput}
+              isLoading={isReceiveLoading}
             >
               Recieve
             </Button>
@@ -406,9 +428,17 @@ export default function Home() {
                   value={inputId}
                   onChange={(e) => setInputId(e.target.value)}
                 />
-                <Button disabled={!inputId} form="connection-form">
-                  Connect
-                </Button>
+                {inputId ? (
+                  <Button
+                    type="submit"
+                    disabled={!inputId}
+                    form="connection-form"
+                  >
+                    Connect
+                  </Button>
+                ) : (
+                  <Button onClick={pasteConnectionId}>Paste</Button>
+                )}
               </Flex>
             </form>
           )}
