@@ -2,6 +2,7 @@ import React from "react";
 import "./piano.styles.scss";
 import { noteNames } from "@/utils/pianoNotes";
 import { INote } from "@/types/global.types";
+import Key from "./Key/Key";
 
 interface IPiano {
   playedNotes: INote[];
@@ -33,30 +34,23 @@ const Piano = ({ playedNotes, showLabel = false }: IPiano) => {
         }
 
         keys.push(
-          <div key={i} className={`key black ${isEmpty && "is-empty"} `}>
-            <span
-              className={`note black ${
-                playedNotes.find(
-                  ({ note }) => note === blackNoteLabel.split(" ").join("")
-                ) && "pressed"
-              }`}
-            >
-              {showLabel ? blackNoteLabel : ""}
-            </span>
-          </div>
+          <Key
+            key={i}
+            isEmpty={isEmpty}
+            playedNotes={playedNotes}
+            showLabel={showLabel}
+            label={blackNoteLabel}
+            keyType="black"
+          />
         );
       } else {
         keys.push(
-          <div key={i} className={`key white `}>
-            <span
-              className={`note white ${
-                playedNotes.find(({ note }) => note === whiteNoteLabel) &&
-                "pressed"
-              }`}
-            >
-              {showLabel ? whiteNoteLabel : ""}
-            </span>
-          </div>
+          <Key
+            key={i}
+            playedNotes={playedNotes}
+            showLabel={showLabel}
+            label={whiteNoteLabel}
+          />
         );
       }
     }

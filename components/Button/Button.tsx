@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 import "./button.scss";
 import { Loader } from "@hover-design/react";
+import variables from "@/theme/colors.module.scss";
 
 type IButton = {
   children: ReactNode;
@@ -31,7 +32,11 @@ export const Button = ({
         {children}{" "}
         {isLoading && (
           <span>
-            <Loader color="#6c584c" dashLength={50} height={"10px"} />
+            <Loader
+              color={variables.accentColorDark}
+              dashLength={50}
+              height={"10px"}
+            />
           </span>
         )}
       </button>

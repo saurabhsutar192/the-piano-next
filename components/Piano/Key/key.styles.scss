@@ -1,0 +1,65 @@
+@import "@/theme/colors.module.scss";
+
+.key {
+  overflow: hidden;
+  flex: 1;
+  height: 100%;
+  border-bottom-left-radius: 1000px;
+  border-bottom-right-radius: 1000px;
+  box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
+
+  .note {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: 100%;
+    font-size: 0.7vw;
+    flex: 1;
+    padding: 10px 5px;
+    text-wrap: wrap;
+    &.pressed {
+      border: min(0.1vw, 2px) solid white;
+      border-top: none;
+      border-bottom-left-radius: 1000px;
+      border-bottom-right-radius: 1000px;
+    }
+  }
+
+  &.white {
+    background: white;
+    border: 1px solid $backgroundColor;
+    border-top: none;
+
+    &:first-child {
+      border-top-left-radius: 20px;
+    }
+    &:last-child {
+      border-top-right-radius: 20px;
+    }
+
+    .note {
+      &.pressed {
+        background: $hightlightColorDark !important;
+      }
+    }
+  }
+
+  &.black {
+    padding: min(0.1vw, 2px);
+    color: white;
+    background: black;
+    margin-inline: 0.3%;
+    &.is-empty {
+      visibility: hidden;
+    }
+
+    .note {
+      font-size: 0.5vw;
+      text-align: center;
+      &.pressed {
+        background: $hightlightColorLight !important;
+        color: black;
+      }
+    }
+  }
+}

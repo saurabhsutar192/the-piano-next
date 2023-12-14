@@ -7,13 +7,13 @@ import _ from "lodash";
 import Piano from "../components/Piano/Piano";
 import { Flex, Input, Label, Select } from "@hover-design/react";
 import Switch from "../components/Switch/Switch";
-import { io } from "socket.io-client";
-import { Socket } from "socket.io-client";
+import { Socket, io } from "socket.io-client";
 import { usePianoSound } from "@/hooks/usePianoSound";
 import { pianoNotes } from "@/utils/pianoNotes";
 import { INote, NoteEvent } from "@/types/global.types";
 import { Button } from "@/components/Button/Button";
 import toast, { Toaster } from "react-hot-toast";
+import variables from "@/theme/colors.module.scss";
 
 interface IOptions {
   label: string;
@@ -369,7 +369,7 @@ export default function Home() {
               <Select
                 placeholder="Select MIDI Input"
                 borderRadius="20px"
-                color="#6c584c"
+                color={variables.accentColorDark}
                 id="midi-selector"
                 options={midiOptions}
                 isDisabled={isReceiveMode}
