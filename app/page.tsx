@@ -38,6 +38,8 @@ export default function Home() {
   const [liftedNotes, setLiftedNotes] = useState<string[]>(pianoNotes);
   const [connectionId, setConnectionId] = useState("");
   const [inputId, setInputId] = useState("");
+  const [isBroadcastLoading, setIsBroadcastLoading] = useState(false);
+  const [isReceiveLoading, setIsReceiveLoading] = useState(false);
 
   const notesPlay = usePianoSound();
 
@@ -64,7 +66,7 @@ export default function Home() {
       .catch((err) => console.log(err));
 
     return () => {
-      socket?.disconnect();
+      disconnectSocket();
     };
   }, []);
 
@@ -87,15 +89,25 @@ export default function Home() {
 
   const initializeSocket = async (isBroadcast = false) => {
     if (socket?.id) disconnectSocket();
-    socket = io("http://localhost:4000");
+    socket = io(process.env.NEXT_PUBLIC_SOCKET || "wa", {
+      reconnection: false,
+    });
     socket?.on("connect", () => {
       if (isBroadcast) {
         joinRoom();
       } else setShowConnectionIdInput(true);
+      setIsBroadcastLoading(false);
+      setIsReceiveLoading(false);
+    });
+    socket?.on("connect_error", () => {
+      toast.error("Something Went Wrong!");
+      setIsBroadcastLoading(false);
+      setIsReceiveLoading(false);
     });
   };
 
   const broadcastData = () => {
+    setIsBroadcastLoading(true);
     setIsReceiveMode(false);
     setShowConnectionIdInput(false);
     initializeSocket(true);
@@ -106,7 +118,6 @@ export default function Home() {
   };
 
   const disconnectBroadcast = () => {
-    socket?.emit("disconnect-broadcast", connectionId);
     setIsBroadcastMode(false);
     disconnectSocket();
   };
@@ -140,9 +151,6 @@ export default function Home() {
   };
 
   const openRecievingInput = () => {
-    if (socket?.id) {
-      socket?.emit("disconnect-broadcast", connectionId);
-    }
     initializeSocket();
     setConnectionId("");
     setInputId("");
@@ -169,22 +177,27 @@ export default function Home() {
 
   const connectToId: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
-    socket?.emit(
-      "join-room",
-      { room: inputId, isBroadcaster: false },
-      (room: string, errMsg: string) => {
-        if (!errMsg) {
-          setIsReceiveMode(true);
-          setIsBroadcastMode(false);
-          setConnectionId(room);
-          recieveSocketData(room);
-          toast.success(`Connected To Broadcaster Successfully`);
-        } else {
-          toast.error(errMsg);
-          disconnectSocket();
+    if (inputId === connectionId) {
+      toast.success("Already connected to the broadcaster!");
+    } else {
+      setIsReceiveLoading(true);
+      socket?.emit(
+        "join-room",
+        { room: inputId, isBroadcaster: false },
+        (room: string, errMsg: string) => {
+          if (!errMsg) {
+            setIsReceiveMode(true);
+            setIsBroadcastMode(false);
+            setConnectionId(room);
+            recieveSocketData(room);
+            toast.success(`Connected To Broadcaster Successfully`);
+          } else {
+            toast.error(errMsg);
+          }
+          setIsReceiveLoading(false);
         }
-      }
-    );
+      );
+    }
   };
 
   useEffect(() => {
@@ -385,6 +398,7 @@ export default function Home() {
               onClose={disconnectBroadcast}
               onClick={broadcastData}
               isActive={isBroadcastMode}
+              isLoading={isBroadcastLoading}
             >
               Broadcast
             </Button>
@@ -392,6 +406,7 @@ export default function Home() {
               onClose={disconnectReceive}
               onClick={openRecievingInput}
               isActive={isReceiveMode || showConnectionIdInput}
+              isLoading={isReceiveLoading}
             >
               Recieve
             </Button>
