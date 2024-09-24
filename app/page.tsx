@@ -212,6 +212,65 @@ export default function Home() {
     });
   }, [socket, isSustain, isBroadcastMode]);
 
+  const handleNotePlay = (note: string, velocity = 100) => {
+    setLiftedNotes((prev) => {
+      const notes = prev.filter((notes) => notes !== note);
+      isBroadcastMode &&
+        socket?.emit(
+          "send-lifted-notes",
+          {
+            liftedNotes: notes,
+          },
+          connectionId
+        );
+      return notes;
+    });
+    setPlayedNotes((prev) => {
+      const notes = _.uniq([
+        ...prev,
+        { note: note, velocity: velocity as number },
+      ]);
+      isBroadcastMode &&
+        socket?.emit(
+          "send-played-notes",
+          {
+            playedNotes: notes,
+          },
+          connectionId
+        );
+      playNoteAudio(notes);
+      return notes;
+    });
+  };
+
+  const handleNoteLift = (note: string) => {
+    setLiftedNotes((prev) => {
+      const notes = _.uniq([...prev, note]);
+      isBroadcastMode &&
+        socket?.emit(
+          "send-lifted-notes",
+          {
+            liftedNotes: notes,
+          },
+          connectionId
+        );
+      stopNoteAudio(notes);
+      return notes;
+    });
+    setPlayedNotes((prev) => {
+      const notes = prev.filter((notes) => notes.note !== note);
+      isBroadcastMode &&
+        socket?.emit(
+          "send-played-notes",
+          {
+            playedNotes: notes,
+          },
+          connectionId
+        );
+      return notes;
+    });
+  };
+
   useEffect(() => {
     if (inputRef.current !== myInput?.name) {
       inputRef.current &&
@@ -224,66 +283,13 @@ export default function Home() {
 
     !isReceiveMode
       ? myInput?.addListener("noteon", (e: NoteEvent) => {
-          setLiftedNotes((prev) => {
-            const notes = prev.filter((notes) => notes !== e.note.identifier);
-            isBroadcastMode &&
-              socket?.emit(
-                "send-lifted-notes",
-                {
-                  liftedNotes: notes,
-                },
-                connectionId
-              );
-            return notes;
-          });
-          setPlayedNotes((prev) => {
-            const notes = _.uniq([
-              ...prev,
-              { note: e.note.identifier, velocity: e.rawVelocity as number },
-            ]);
-            isBroadcastMode &&
-              socket?.emit(
-                "send-played-notes",
-                {
-                  playedNotes: notes,
-                },
-                connectionId
-              );
-            playNoteAudio(notes);
-            return notes;
-          });
+          handleNotePlay(e.note.identifier, e.rawVelocity);
         })
       : myInput?.removeListener("noteon");
 
     !isReceiveMode
       ? myInput?.addListener("noteoff", (e) => {
-          setLiftedNotes((prev) => {
-            const notes = _.uniq([...prev, e.note.identifier]);
-            isBroadcastMode &&
-              socket?.emit(
-                "send-lifted-notes",
-                {
-                  liftedNotes: notes,
-                },
-                connectionId
-              );
-            stopNoteAudio(notes);
-            return notes;
-          });
-          setPlayedNotes((prev) => {
-            const notes = prev.filter(
-              (notes) => notes.note !== e.note.identifier
-            );
-            isBroadcastMode &&
-              socket?.emit(
-                "send-played-notes",
-                {
-                  playedNotes: notes,
-                },
-                connectionId
-              );
-            return notes;
-          });
+          handleNoteLift(e.note.identifier);
         })
       : myInput?.removeListener("noteoff");
 
@@ -382,7 +388,12 @@ export default function Home() {
             </Flex>
           </Flex>
         </Flex>
-        <Piano playedNotes={playedNotes} showLabel={showLabel} />
+        <Piano
+          playedNotes={playedNotes}
+          handleNotePlay={handleNotePlay}
+          handleNoteLift={handleNoteLift}
+          showLabel={showLabel}
+        />
         <Flex
           className="streaming-controls-container"
           flexDirection="column"

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import "./piano.styles.scss";
 import { noteNames } from "@/utils/pianoNotes";
 import { INote } from "@/types/global.types";
@@ -7,9 +7,18 @@ import Key from "./Key/Key";
 interface IPiano {
   playedNotes: INote[];
   showLabel: boolean;
+  handleNotePlay: (note: string, velocity?: number) => void;
+  handleNoteLift: (note: string) => void;
 }
 
-const Piano = ({ playedNotes, showLabel = false }: IPiano) => {
+const Piano = ({
+  playedNotes,
+  showLabel = false,
+  handleNotePlay,
+  handleNoteLift,
+}: IPiano) => {
+  const [isClicked, setIsClicked] = useState(false);
+
   const renderKeys = (color: "white" | "black") => {
     const keys = [];
     let skipKey = 1;
@@ -38,9 +47,13 @@ const Piano = ({ playedNotes, showLabel = false }: IPiano) => {
             key={i}
             isEmpty={isEmpty}
             playedNotes={playedNotes}
+            handleNotePlay={handleNotePlay}
+            handleNoteLift={handleNoteLift}
             showLabel={showLabel}
             label={blackNoteLabel}
             keyType="black"
+            isClicked={isClicked}
+            setIsClicked={setIsClicked}
           />
         );
       } else {
@@ -50,6 +63,10 @@ const Piano = ({ playedNotes, showLabel = false }: IPiano) => {
             playedNotes={playedNotes}
             showLabel={showLabel}
             label={whiteNoteLabel}
+            handleNotePlay={handleNotePlay}
+            handleNoteLift={handleNoteLift}
+            isClicked={isClicked}
+            setIsClicked={setIsClicked}
           />
         );
       }

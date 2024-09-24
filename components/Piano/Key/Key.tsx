@@ -8,6 +8,10 @@ interface IKeyProps {
   showLabel: boolean;
   label: string;
   keyType?: "white" | "black";
+  handleNotePlay: (note: string, velocity?: number) => void;
+  handleNoteLift: (note: string) => void;
+  isClicked: boolean;
+  setIsClicked: (value: boolean) => void;
 }
 
 const Key = ({
@@ -16,17 +20,47 @@ const Key = ({
   showLabel,
   label,
   keyType = "white",
+  handleNoteLift,
+  handleNotePlay,
+  isClicked,
+  setIsClicked,
 }: IKeyProps) => {
+  const keyName = label.split(" ").join("");
+
   const isPressed = useMemo(
-    () => playedNotes.find(({ note }) => note === label.split(" ").join("")),
+    () => playedNotes.find(({ note }) => note === keyName),
     [playedNotes, label]
   );
 
+  const handleKeyClick = () => {
+    setIsClicked(true);
+    handleNotePlay(keyName);
+  };
+
+  const handleKeyLeave = () => {
+    setIsClicked(false);
+    handleNoteLift(keyName);
+  };
+
+  const handleMouseEnter = () => {
+    isClicked && handleNotePlay(keyName);
+  };
+
+  const handleMouseLeave = () => {
+    isClicked && handleNoteLift(keyName);
+  };
+
   return (
     <div className={`key ${keyType} ${isEmpty && "is-empty"} `}>
-      <span className={`note ${isPressed && "pressed"}`}>
+      <button
+        className={`note ${isPressed && "pressed"}`}
+        onMouseDown={handleKeyClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseUp={handleKeyLeave}
+        onMouseLeave={handleMouseLeave}
+      >
         {showLabel ? label : ""}
-      </span>
+      </button>
     </div>
   );
 };
