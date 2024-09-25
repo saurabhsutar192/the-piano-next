@@ -9,7 +9,11 @@ import { Flex, Input, Label, Select } from "@hover-design/react";
 import Switch from "../components/Switch/Switch";
 import { Socket, io } from "socket.io-client";
 import { usePianoSound } from "@/hooks/usePianoSound";
-import { pianoNotes } from "@/utils/pianoNotes";
+import {
+  convertVelocityToVolume,
+  keyboardNoteMap,
+  pianoNotes,
+} from "@/utils/utils";
 import { INote, NoteEvent } from "@/types/global.types";
 import { Button } from "@/components/Button/Button";
 import toast, { Toaster } from "react-hot-toast";
@@ -327,9 +331,29 @@ export default function Home() {
     }
   };
 
-  const convertVelocityToVolume = (velocity: number) => {
-    return (velocity / 100) * 0.3;
+  const handleKeyDown = (e: globalThis.KeyboardEvent) => {
+    Object.keys(keyboardNoteMap).forEach((note) => {
+      if (e.key === note)
+        handleNotePlay(keyboardNoteMap[note as keyof typeof keyboardNoteMap]);
+    });
   };
+
+  const handleKeyUp = (e: globalThis.KeyboardEvent) => {
+    Object.keys(keyboardNoteMap).forEach((note) => {
+      if (e.key === note)
+        handleNoteLift(keyboardNoteMap[note as keyof typeof keyboardNoteMap]);
+    });
+  };
+
+  useEffect(() => {
+    document.body.addEventListener("keydown", handleKeyDown);
+    document.body.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      document.body.removeEventListener("keydown", handleKeyDown);
+      document.body.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [notesPlay]);
 
   return (
     <Flex className={"main"} alignItems="center">

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./piano.styles.scss";
-import { noteNames } from "@/utils/pianoNotes";
+import { noteNames } from "@/utils/utils";
 import { INote } from "@/types/global.types";
 import Key from "./Key/Key";
 
