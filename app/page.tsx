@@ -9,7 +9,11 @@ import { Flex, Input, Label, Select } from "@hover-design/react";
 import Switch from "../components/Switch/Switch";
 import { Socket, io } from "socket.io-client";
 import { usePianoSound } from "@/hooks/usePianoSound";
-import { pianoNotes } from "@/utils/pianoNotes";
+import {
+  convertVelocityToVolume,
+  keyboardNoteMap,
+  pianoNotes,
+} from "@/utils/utils";
 import { INote, NoteEvent } from "@/types/global.types";
 import { Button } from "@/components/Button/Button";
 import toast, { Toaster } from "react-hot-toast";
@@ -212,6 +216,65 @@ export default function Home() {
     });
   }, [socket, isSustain, isBroadcastMode]);
 
+  const handleNotePlay = (note: string, velocity = 100) => {
+    setLiftedNotes((prev) => {
+      const notes = prev.filter((notes) => notes !== note);
+      isBroadcastMode &&
+        socket?.emit(
+          "send-lifted-notes",
+          {
+            liftedNotes: notes,
+          },
+          connectionId
+        );
+      return notes;
+    });
+    setPlayedNotes((prev) => {
+      const notes = _.uniq([
+        ...prev,
+        { note: note, velocity: velocity as number },
+      ]);
+      isBroadcastMode &&
+        socket?.emit(
+          "send-played-notes",
+          {
+            playedNotes: notes,
+          },
+          connectionId
+        );
+      playNoteAudio(notes);
+      return notes;
+    });
+  };
+
+  const handleNoteLift = (note: string) => {
+    setLiftedNotes((prev) => {
+      const notes = _.uniq([...prev, note]);
+      isBroadcastMode &&
+        socket?.emit(
+          "send-lifted-notes",
+          {
+            liftedNotes: notes,
+          },
+          connectionId
+        );
+      stopNoteAudio(notes);
+      return notes;
+    });
+    setPlayedNotes((prev) => {
+      const notes = prev.filter((notes) => notes.note !== note);
+      isBroadcastMode &&
+        socket?.emit(
+          "send-played-notes",
+          {
+            playedNotes: notes,
+          },
+          connectionId
+        );
+      return notes;
+    });
+  };
+
   useEffect(() => {
     if (inputRef.current !== myInput?.name) {
       inputRef.current &&
@@ -224,66 +287,13 @@ export default function Home() {
 
     !isReceiveMode
       ? myInput?.addListener("noteon", (e: NoteEvent) => {
-          setLiftedNotes((prev) => {
-            const notes = prev.filter((notes) => notes !== e.note.identifier);
-            isBroadcastMode &&
-              socket?.emit(
-                "send-lifted-notes",
-                {
-                  liftedNotes: notes,
-                },
-                connectionId
-              );
-            return notes;
-          });
-          setPlayedNotes((prev) => {
-            const notes = _.uniq([
-              ...prev,
-              { note: e.note.identifier, velocity: e.rawVelocity as number },
-            ]);
-            isBroadcastMode &&
-              socket?.emit(
-                "send-played-notes",
-                {
-                  playedNotes: notes,
-                },
-                connectionId
-              );
-            playNoteAudio(notes);
-            return notes;
-          });
+          handleNotePlay(e.note.identifier, e.rawVelocity);
         })
       : myInput?.removeListener("noteon");
 
     !isReceiveMode
       ? myInput?.addListener("noteoff", (e) => {
-          setLiftedNotes((prev) => {
-            const notes = _.uniq([...prev, e.note.identifier]);
-            isBroadcastMode &&
-              socket?.emit(
-                "send-lifted-notes",
-                {
-                  liftedNotes: notes,
-                },
-                connectionId
-              );
-            stopNoteAudio(notes);
-            return notes;
-          });
-          setPlayedNotes((prev) => {
-            const notes = prev.filter(
-              (notes) => notes.note !== e.note.identifier
-            );
-            isBroadcastMode &&
-              socket?.emit(
-                "send-played-notes",
-                {
-                  playedNotes: notes,
-                },
-                connectionId
-              );
-            return notes;
-          });
+          handleNoteLift(e.note.identifier);
         })
       : myInput?.removeListener("noteoff");
 
@@ -321,9 +331,29 @@ export default function Home() {
     }
   };
 
-  const convertVelocityToVolume = (velocity: number) => {
-    return (velocity / 100) * 0.3;
+  const handleKeyDown = (e: globalThis.KeyboardEvent) => {
+    Object.keys(keyboardNoteMap).forEach((note) => {
+      if (e.key === note)
+        handleNotePlay(keyboardNoteMap[note as keyof typeof keyboardNoteMap]);
+    });
   };
+
+  const handleKeyUp = (e: globalThis.KeyboardEvent) => {
+    Object.keys(keyboardNoteMap).forEach((note) => {
+      if (e.key === note)
+        handleNoteLift(keyboardNoteMap[note as keyof typeof keyboardNoteMap]);
+    });
+  };
+
+  useEffect(() => {
+    document.body.addEventListener("keydown", handleKeyDown);
+    document.body.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      document.body.removeEventListener("keydown", handleKeyDown);
+      document.body.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [notesPlay]);
 
   return (
     <Flex className={"main"} alignItems="center">
@@ -382,7 +412,12 @@ export default function Home() {
             </Flex>
           </Flex>
         </Flex>
-        <Piano playedNotes={playedNotes} showLabel={showLabel} />
+        <Piano
+          playedNotes={playedNotes}
+          handleNotePlay={handleNotePlay}
+          handleNoteLift={handleNoteLift}
+          showLabel={showLabel}
+        />
         <Flex
           className="streaming-controls-container"
           flexDirection="column"

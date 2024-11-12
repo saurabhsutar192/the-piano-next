@@ -8,6 +8,13 @@
   border-bottom-right-radius: 1000px;
   box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
 
+  button {
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+  }
   .note {
     display: flex;
     align-items: flex-end;
@@ -17,11 +24,15 @@
     flex: 1;
     padding: 10px 5px;
     text-wrap: wrap;
+    width: 100%;
     &.pressed {
       border: min(0.1vw, 2px) solid white;
       border-top: none;
       border-bottom-left-radius: 1000px;
       border-bottom-right-radius: 1000px;
+    }
+    &:hover {
+      cursor: pointer;
     }
   }
 
@@ -46,7 +57,7 @@
 
   &.black {
     padding: min(0.1vw, 2px);
-    color: white;
+
     background: black;
     margin-inline: 0.3%;
     &.is-empty {
@@ -54,6 +65,7 @@
     }
 
     .note {
+      color: white;
       font-size: 0.5vw;
       text-align: center;
       &.pressed {
