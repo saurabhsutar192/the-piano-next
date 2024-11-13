@@ -1,11 +1,10 @@
 "use client";
 
 import { FormEventHandler, useEffect, useMemo, useRef, useState } from "react";
-import "./page.scss";
 import { WebMidi } from "webmidi";
 import _ from "lodash";
 import Piano from "../components/Piano/Piano";
-import { Flex, Input, Label, Select } from "@hover-design/react";
+import { Flex, Input, Label, Loader, Select } from "@hover-design/react";
 import Switch from "../components/Switch/Switch";
 import { Socket, io } from "socket.io-client";
 import { usePianoSound } from "@/hooks/usePianoSound";
@@ -44,6 +43,8 @@ export default function Home() {
   const [inputId, setInputId] = useState("");
   const [isBroadcastLoading, setIsBroadcastLoading] = useState(false);
   const [isReceiveLoading, setIsReceiveLoading] = useState(false);
+
+  const [isSoundLoading, setIsSoundLoading] = useState(true);
 
   const notesPlay = usePianoSound();
 
@@ -355,19 +356,44 @@ export default function Home() {
     };
   }, [notesPlay]);
 
+  useEffect(() => {
+    pianoNotes.forEach((note) => {
+      setIsSoundLoading(!notesPlay[note][1].sound);
+    });
+  }, [notesPlay]);
+
+  if (isSoundLoading) {
+    return (
+      <Flex
+        alignItems="center"
+        flexDirection="column"
+        gap="10px"
+        className="loader-container"
+      >
+        <Loader
+          size={40}
+          color={variables.accentColorDark}
+          className="loader"
+        />
+        <p>Loading Sounds...</p>
+      </Flex>
+    );
+  }
+
   return (
-    <Flex className={"main"} alignItems="center">
+    <>
       <Flex
         flexDirection="column"
         className="piano-container"
         alignItems="center"
       >
         <h1>THE PIANO</h1>
+
         <Flex className="piano-controls-container" justifyContent="center">
           <Flex
             className="piano-controls"
             flexWrap={"wrap"}
-            justifyContent="space-between"
+            justifyContent="center"
             gap="20px"
           >
             <Switch
@@ -487,6 +513,6 @@ export default function Home() {
         </Flex>
       </Flex>
       <Toaster />
-    </Flex>
+    </>
   );
 }

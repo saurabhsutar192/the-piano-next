@@ -1,10 +1,13 @@
 @import "@/theme/colors.module.scss";
 @import url("https://fonts.googleapis.com/css2?family=Montserrat+Subrayada:wght@700&family=Montserrat:wght@400;500;600;700&display=swap");
+
 .main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 100vh;
   padding: 20px;
   background: $backgroundColor;
-
   overflow-y: scroll;
   color: $accentColorDark;
 
@@ -12,11 +15,23 @@
     font-family: "Montserrat", sans-serif;
   }
 
+  .loader-container {
+    font-size: 20px;
+    .loader {
+      circle {
+        stroke: $accentColorDark;
+      }
+      circle:first-child {
+        stroke: $hightlightColorDark;
+      }
+    }
+  }
+
   .piano-container {
     width: 100%;
 
     h1 {
-      font-size: 100px;
+      font-size: clamp(40px, 10vw, 100px);
       text-align: center;
       font-weight: 500;
       letter-spacing: 2%;
@@ -32,7 +47,7 @@
       }
 
       .midi-selector {
-        width: 345px;
+        width: clamp(250px, 20vw, 345px);
         label {
           visibility: hidden;
         }
