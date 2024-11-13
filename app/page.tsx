@@ -18,6 +18,8 @@ import { Button } from "@/components/Button/Button";
 import toast, { Toaster } from "react-hot-toast";
 import variables from "@/theme/colors.module.scss";
 
+// Comments out the broadcast feature temporarily
+
 interface IOptions {
   label: string;
   value: string;
@@ -41,8 +43,8 @@ export default function Home() {
   const [liftedNotes, setLiftedNotes] = useState<string[]>(pianoNotes);
   const [connectionId, setConnectionId] = useState("");
   const [inputId, setInputId] = useState("");
-  const [isBroadcastLoading, setIsBroadcastLoading] = useState(false);
-  const [isReceiveLoading, setIsReceiveLoading] = useState(false);
+  // const [isBroadcastLoading, setIsBroadcastLoading] = useState(false);
+  // const [isReceiveLoading, setIsReceiveLoading] = useState(false);
 
   const [isSoundLoading, setIsSoundLoading] = useState(true);
 
@@ -101,39 +103,39 @@ export default function Home() {
       if (isBroadcast) {
         joinRoom();
       } else setShowConnectionIdInput(true);
-      setIsBroadcastLoading(false);
-      setIsReceiveLoading(false);
+      // setIsBroadcastLoading(false);
+      // setIsReceiveLoading(false);
     });
     socket?.on("connect_error", () => {
       toast.error("Something Went Wrong!");
-      setIsBroadcastLoading(false);
-      setIsReceiveLoading(false);
+      // setIsBroadcastLoading(false);
+      // setIsReceiveLoading(false);
     });
   };
 
-  const broadcastData = () => {
-    setIsBroadcastLoading(true);
-    setIsReceiveMode(false);
-    setShowConnectionIdInput(false);
-    initializeSocket(true);
-  };
+  // const broadcastData = () => {
+  //   setIsBroadcastLoading(true);
+  //   setIsReceiveMode(false);
+  //   setShowConnectionIdInput(false);
+  //   initializeSocket(true);
+  // };
 
   const disconnectSocket = () => {
     socket?.disconnect();
   };
 
-  const disconnectBroadcast = () => {
-    setIsBroadcastMode(false);
-    disconnectSocket();
-  };
+  // const disconnectBroadcast = () => {
+  //   setIsBroadcastMode(false);
+  //   disconnectSocket();
+  // };
 
-  const disconnectReceive = () => {
-    setIsReceiveMode(false);
-    setShowConnectionIdInput(false);
-    setInputId("");
-    setConnectionId("");
-    disconnectSocket();
-  };
+  // const disconnectReceive = () => {
+  //   setIsReceiveMode(false);
+  //   setShowConnectionIdInput(false);
+  //   setInputId("");
+  //   setConnectionId("");
+  //   disconnectSocket();
+  // };
 
   const recieveSocketData = (room: string) => {
     if (!socket) return;
@@ -155,13 +157,13 @@ export default function Home() {
     });
   };
 
-  const openRecievingInput = () => {
-    initializeSocket();
-    setConnectionId("");
-    setInputId("");
-    setShowConnectionIdInput(true);
-    setIsBroadcastMode(false);
-  };
+  // const openRecievingInput = () => {
+  //   initializeSocket();
+  //   setConnectionId("");
+  //   setInputId("");
+  //   setShowConnectionIdInput(true);
+  //   setIsBroadcastMode(false);
+  // };
 
   const copyConnectionId = () => {
     navigator.clipboard
@@ -185,7 +187,7 @@ export default function Home() {
     if (inputId === connectionId) {
       toast.success("Already connected to the broadcaster!");
     } else {
-      setIsReceiveLoading(true);
+      // setIsReceiveLoading(true);
       socket?.emit(
         "join-room",
         { room: inputId, isBroadcaster: false },
@@ -199,7 +201,7 @@ export default function Home() {
           } else {
             toast.error(errMsg);
           }
-          setIsReceiveLoading(false);
+          // setIsReceiveLoading(false);
         }
       );
     }
@@ -450,7 +452,7 @@ export default function Home() {
           alignItems="center"
           gap="20px"
         >
-          <Flex
+          {/* <Flex
             className="streaming-controls"
             justifyContent="center"
             gap="20px"
@@ -471,7 +473,7 @@ export default function Home() {
             >
               Recieve
             </Button>
-          </Flex>
+          </Flex> */}
           {showConnectionIdInput && (
             <form id="connection-form" onSubmit={connectToId}>
               <Flex
