@@ -1,5 +1,4 @@
 @import "@/theme/colors.module.scss";
-@import url("https://fonts.googleapis.com/css2?family=Montserrat+Subrayada:wght@700&family=Montserrat:wght@400;500;600;700&display=swap");
 
 .main {
   display: flex;
@@ -10,10 +9,6 @@
   background: $backgroundColor;
   overflow-y: scroll;
   color: $accentColorDark;
-
-  * {
-    font-family: "Montserrat", sans-serif;
-  }
 
   .loader-container {
     font-size: 20px;
@@ -33,9 +28,8 @@
     h1 {
       font-size: clamp(40px, 10vw, 100px);
       text-align: center;
-      font-weight: 500;
+      font-weight: 600;
       letter-spacing: 2%;
-      font-family: "Montserrat Subrayada", sans-serif;
     }
 
     .piano-controls-container {

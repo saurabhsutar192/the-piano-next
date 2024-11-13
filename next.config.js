@@ -1,5 +1,4 @@
 module.exports = {
-  optimizeFonts: false,
   module: {
     rules: [
       {

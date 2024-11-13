@@ -17,6 +17,7 @@ import { INote, NoteEvent } from "@/types/global.types";
 import { Button } from "@/components/Button/Button";
 import toast, { Toaster } from "react-hot-toast";
 import variables from "@/theme/colors.module.scss";
+import { montserratSub } from "./fonts";
 
 // Comments out the broadcast feature temporarily
 
@@ -389,8 +390,7 @@ export default function Home() {
         className="piano-container"
         alignItems="center"
       >
-        <h1>THE PIANO</h1>
-
+        <h1 className={montserratSub.className}>THE PIANO</h1>
         <Flex className="piano-controls-container" justifyContent="center">
           <Flex
             className="piano-controls"

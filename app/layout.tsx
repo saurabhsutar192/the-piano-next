@@ -2,9 +2,7 @@ import "./globals.scss";
 import "@hover-design/react/dist/style.css";
 import "./page.scss";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-
-const inter = Inter({ subsets: ["latin"] });
+import { montserrat } from "./fonts";
 
 export const metadata: Metadata = {
   title: "The Piano",
@@ -18,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={montserrat.className}>
         <div className={"main"}>{children}</div>
       </body>
     </html>
