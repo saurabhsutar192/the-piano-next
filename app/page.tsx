@@ -50,9 +50,15 @@ export default function Home() {
   const [liftedNotes, setLiftedNotes] = useState<string[]>(pianoNotes);
   // const [connectionId, setConnectionId] = useState("");
   // const [inputId, setInputId] = useState("");
+
+  const localStoragePianoKeys =
+    typeof window !== "undefined"
+      ? window?.localStorage.getItem("pianoKeys") || "88"
+      : "88";
+
   const [pianoSize, setPianoSize] = useState<IOptions>({
-    label: localStorage.getItem("pianoKeys") || "88",
-    value: localStorage.getItem("pianoKeys") || "88",
+    label: localStoragePianoKeys,
+    value: localStoragePianoKeys,
   });
   // const [isBroadcastLoading, setIsBroadcastLoading] = useState(false);
   // const [isReceiveLoading, setIsReceiveLoading] = useState(false);
@@ -453,7 +459,11 @@ export default function Home() {
                 options={pianoSizes}
                 onChange={(value) => {
                   value && setPianoSize(value as IOptions);
-                  localStorage.setItem("pianoKeys", (value as IOptions).value);
+                  typeof window !== "undefined" &&
+                    window?.localStorage.setItem(
+                      "pianoKeys",
+                      (value as IOptions).value
+                    );
                 }}
                 value={pianoSize}
               />
