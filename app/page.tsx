@@ -22,6 +22,7 @@ import {
 } from "react-hot-toast";
 import variables from "@/theme/colors.module.scss";
 import { montserratSub } from "./fonts";
+import { Footer } from "@/components/Footer/Footer";
 
 // Comments out the broadcast feature temporarily
 
@@ -49,9 +50,10 @@ export default function Home() {
   const [liftedNotes, setLiftedNotes] = useState<string[]>(pianoNotes);
   // const [connectionId, setConnectionId] = useState("");
   // const [inputId, setInputId] = useState("");
-  const [pianoSize, setPianoSize] = useState<IOptions>(
-    pianoSizes[pianoSizes.length - 1]
-  );
+  const [pianoSize, setPianoSize] = useState<IOptions>({
+    label: localStorage.getItem("pianoKeys") || "88",
+    value: localStorage.getItem("pianoKeys") || "88",
+  });
   // const [isBroadcastLoading, setIsBroadcastLoading] = useState(false);
   // const [isReceiveLoading, setIsReceiveLoading] = useState(false);
 
@@ -451,6 +453,7 @@ export default function Home() {
                 options={pianoSizes}
                 onChange={(value) => {
                   value && setPianoSize(value as IOptions);
+                  localStorage.setItem("pianoKeys", (value as IOptions).value);
                 }}
                 value={pianoSize}
               />
@@ -548,6 +551,7 @@ export default function Home() {
             </Flex>
           )} */}
         </Flex>
+        <Footer />
       </Flex>
       <Toaster />
     </>
