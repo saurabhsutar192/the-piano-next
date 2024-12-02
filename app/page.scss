@@ -1,12 +1,18 @@
 @import "@/theme/colors.module.scss";
+body {
+  background: $backgroundColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
 
 .main {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  width: 100%;
   padding: 20px;
-  background: $backgroundColor;
   overflow-y: scroll;
   color: $accentColorDark;
 
@@ -40,10 +46,25 @@
         white-space: nowrap;
       }
 
-      .midi-selector {
-        width: clamp(250px, 20vw, 345px);
-        label {
-          visibility: hidden;
+      .selector {
+        &.midi {
+          width: clamp(250px, 20vw, 345px);
+          label {
+            visibility: hidden;
+          }
+        }
+        &.piano-size {
+          width: 55px;
+          [role="combobox"] {
+            div:first-child {
+              width: 100%;
+              display: flex;
+              justify-content: center !important;
+            }
+            div:has(> svg) {
+              display: none !important;
+            }
+          }
         }
 
         [role="combobox"] div:first-child {
@@ -51,9 +72,14 @@
             color: $hightlightColorDark;
           }
         }
-        [role="option"][data-hover="true"] {
-          background-color: $hightlightColorDark;
-          color: white;
+        [role="option"] {
+          padding: 8px 12px;
+          display: flex;
+          justify-content: center;
+          &[data-hover="true"] {
+            background-color: $hightlightColorDark;
+            color: white;
+          }
         }
       }
     }

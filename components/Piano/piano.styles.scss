@@ -3,6 +3,16 @@
 .piano {
   width: 100%;
   height: 14vw;
+  overflow: hidden;
+  -webkit-touch-callout: none; /* Safari */
+  -webkit-user-select: none; /* Chrome */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none;
+
+  &.small {
+    height: 25vw;
+  }
 
   .keys-container {
     height: 100%;
@@ -17,7 +27,7 @@
       position: absolute;
       width: 100%;
       height: 60%;
-      left: 1%;
+      left: 0;
       top: 0;
     }
   }

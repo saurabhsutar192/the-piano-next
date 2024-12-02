@@ -50,17 +50,31 @@ const Key = ({
     isClicked && handleNoteLift(keyName);
   };
 
+  const handleTouchStart: React.TouchEventHandler<HTMLButtonElement> = (e) => {
+    e.preventDefault();
+    handleKeyClick();
+  };
+  const handleTouchEnd: React.TouchEventHandler<HTMLButtonElement> = (e) => {
+    e.preventDefault();
+    handleKeyLeave();
+  };
+
   return (
     <div className={`key ${keyType} ${isEmpty && "is-empty"} `}>
-      <button
-        className={`note ${isPressed && "pressed"}`}
-        onMouseDown={handleKeyClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseUp={handleKeyLeave}
-        onMouseLeave={handleMouseLeave}
-      >
-        {showLabel ? label : ""}
-      </button>
+      {!isEmpty && (
+        <button
+          className={`note ${isPressed && "pressed"}`}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          onMouseDown={handleKeyClick}
+          onMouseUp={handleKeyLeave}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          {showLabel ? label : ""}
+        </button>
+      )}
     </div>
   );
 };

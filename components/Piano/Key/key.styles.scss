@@ -4,8 +4,8 @@
   overflow: hidden;
   flex: 1;
   height: 100%;
-  border-bottom-left-radius: 1000px;
-  border-bottom-right-radius: 1000px;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
   box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
 
   button {
@@ -14,13 +14,14 @@
     background: transparent;
     padding: 0;
     margin: 0;
+    color: black;
   }
   .note {
     display: flex;
     align-items: flex-end;
     justify-content: center;
     height: 100%;
-    font-size: 0.7vw;
+    font-size: 70%;
     flex: 1;
     padding: 10px 5px;
     text-wrap: wrap;
@@ -28,8 +29,8 @@
     &.pressed {
       border: min(0.1vw, 2px) solid white;
       border-top: none;
-      border-bottom-left-radius: 1000px;
-      border-bottom-right-radius: 1000px;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
     }
     &:hover {
       cursor: pointer;
@@ -56,17 +57,18 @@
   }
 
   &.black {
-    padding: min(0.1vw, 2px);
-
     background: black;
     margin-inline: 0.3%;
+    padding: 2px;
     &.is-empty {
       visibility: hidden;
     }
 
     .note {
+      padding: 10px min(0.1vw, 2px);
       color: white;
-      font-size: 0.5vw;
+      font-size: min(50%, 16px);
+      white-space: wrap;
       text-align: center;
       &.pressed {
         background: $hightlightColorLight !important;
