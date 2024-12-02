@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import "./piano.styles.scss";
-import { noteNames } from "@/utils/utils";
+import { noteNames, whiteKeyMap } from "@/utils/utils";
 import { INote } from "@/types/global.types";
 import Key from "./Key/Key";
 
@@ -9,6 +9,7 @@ interface IPiano {
   showLabel: boolean;
   handleNotePlay: (note: string, velocity?: number) => void;
   handleNoteLift: (note: string) => void;
+  pianoSize: string;
 }
 
 const Piano = ({
@@ -16,17 +17,43 @@ const Piano = ({
   showLabel = false,
   handleNotePlay,
   handleNoteLift,
+  pianoSize,
 }: IPiano) => {
   const [isClicked, setIsClicked] = useState(false);
+
+  const blackKeys = useRef<HTMLDivElement>(null);
+  const whiteKeys = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const keyWidth = (
+      whiteKeys?.current?.childNodes[0] as HTMLDivElement
+    ).getBoundingClientRect().width;
+
+    Object.assign((blackKeys.current as HTMLDivElement).style, {
+      left: keyWidth / 2 + "px",
+      fontSize: keyWidth / 2 + "px",
+    });
+  }, [blackKeys, pianoSize]);
 
   const renderKeys = (color: "white" | "black") => {
     const keys = [];
     let skipKey = 1;
-    let gapSwitcher = false;
-    let notesLoopCount = 0;
+    const totalWhiteKeys =
+      whiteKeyMap[pianoSize as keyof typeof whiteKeyMap].whiteKeys;
+    const startOctave =
+      whiteKeyMap[pianoSize as keyof typeof whiteKeyMap].octave;
+    let notesLoopCount = startOctave;
+    const is88Keys = pianoSize === "88";
+    const notesList = noteNames.map((x) => x);
+    let gapSwitcher = !is88Keys;
 
-    for (let i = 0; i < 52; i++) {
-      const noteName = noteNames[i % noteNames.length];
+    if (!is88Keys) {
+      notesList.unshift(...notesList.splice(2));
+      skipKey = 2;
+    }
+
+    for (let i = 0; i < totalWhiteKeys; i++) {
+      const noteName = notesList[i % notesList.length];
 
       if (noteName === "C") notesLoopCount++;
 
@@ -36,7 +63,7 @@ const Piano = ({
       if (color === "black") {
         let isEmpty = false;
 
-        if (skipKey === i || i === 51) {
+        if (skipKey === i || i === totalWhiteKeys - 1) {
           isEmpty = true;
           gapSwitcher = !gapSwitcher;
           skipKey = gapSwitcher ? i + 3 : i + 4;
@@ -76,10 +103,14 @@ const Piano = ({
   };
 
   return (
-    <div className="piano">
+    <div className={`piano ${pianoSize === "25" && "small"}`}>
       <div className="keys-container">
-        <div className="white-keys-container">{renderKeys("white")}</div>
-        <div className="black-keys-container">{renderKeys("black")}</div>
+        <div ref={whiteKeys} className="white-keys-container">
+          {renderKeys("white")}
+        </div>
+        <div ref={blackKeys} className="black-keys-container">
+          {renderKeys("black")}
+        </div>
       </div>
     </div>
   );

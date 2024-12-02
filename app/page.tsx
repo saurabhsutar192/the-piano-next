@@ -1,23 +1,28 @@
 "use client";
 
-import { FormEventHandler, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { WebMidi } from "webmidi";
 import _ from "lodash";
 import Piano from "../components/Piano/Piano";
-import { Flex, Input, Label, Loader, Select } from "@hover-design/react";
+import { Flex, Label, Loader, Select } from "@hover-design/react";
 import Switch from "../components/Switch/Switch";
-import { Socket, io } from "socket.io-client";
+// import { Socket, io } from "socket.io-client";
 import { usePianoSound } from "@/hooks/usePianoSound";
 import {
   convertVelocityToVolume,
   keyboardNoteMap,
   pianoNotes,
+  pianoSizes,
 } from "@/utils/utils";
 import { INote, NoteEvent } from "@/types/global.types";
-import { Button } from "@/components/Button/Button";
-import toast, { Toaster } from "react-hot-toast";
+// import { Button } from "@/components/Button/Button";
+import {
+  // toast,
+  Toaster,
+} from "react-hot-toast";
 import variables from "@/theme/colors.module.scss";
 import { montserratSub } from "./fonts";
+import { Footer } from "@/components/Footer/Footer";
 
 // Comments out the broadcast feature temporarily
 
@@ -26,7 +31,7 @@ interface IOptions {
   value: string;
 }
 
-let socket: Socket | null;
+// let socket: Socket | null;
 
 export default function Home() {
   const [midiOptions, setMidiOptions] = useState<IOptions[]>([]);
@@ -36,14 +41,25 @@ export default function Home() {
   });
   const [playedNotes, setPlayedNotes] = useState<INote[]>([]);
   const [showLabel, setShowLabel] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isReceiveMode, setIsReceiveMode] = useState(false);
-  const [isBroadcastMode, setIsBroadcastMode] = useState(false);
+  // const [isBroadcastMode, setIsBroadcastMode] = useState(false);
   const [isMute, setIsMute] = useState(false);
   const [isSustain, setIsSustain] = useState(false);
-  const [showConnectionIdInput, setShowConnectionIdInput] = useState(false);
+  // const [showConnectionIdInput, setShowConnectionIdInput] = useState(false);
   const [liftedNotes, setLiftedNotes] = useState<string[]>(pianoNotes);
-  const [connectionId, setConnectionId] = useState("");
-  const [inputId, setInputId] = useState("");
+  // const [connectionId, setConnectionId] = useState("");
+  // const [inputId, setInputId] = useState("");
+
+  const localStoragePianoKeys =
+    typeof window !== "undefined"
+      ? window?.localStorage.getItem("pianoKeys") || "88"
+      : "88";
+
+  const [pianoSize, setPianoSize] = useState<IOptions>({
+    label: localStoragePianoKeys,
+    value: localStoragePianoKeys,
+  });
   // const [isBroadcastLoading, setIsBroadcastLoading] = useState(false);
   // const [isReceiveLoading, setIsReceiveLoading] = useState(false);
 
@@ -73,46 +89,46 @@ export default function Home() {
       })
       .catch((err) => console.log(err));
 
-    return () => {
-      disconnectSocket();
-    };
+    // return () => {
+    //   disconnectSocket();
+    // };
   }, []);
 
-  const joinRoom = () => {
-    socket?.emit(
-      "join-room",
-      { room: `p-${socket?.id}`, isBroadcaster: true },
-      (room: string, errMsg: string) => {
-        if (!errMsg) {
-          setIsBroadcastMode(true);
-          setConnectionId(room);
-          toast.success("Broadcast Started Successfully");
-        } else {
-          toast.error(errMsg);
-          disconnectSocket();
-        }
-      }
-    );
-  };
+  // const joinRoom = () => {
+  //   socket?.emit(
+  //     "join-room",
+  //     { room: `p-${socket?.id}`, isBroadcaster: true },
+  //     (room: string, errMsg: string) => {
+  //       if (!errMsg) {
+  //         setIsBroadcastMode(true);
+  //         setConnectionId(room);
+  //         toast.success("Broadcast Started Successfully");
+  //       } else {
+  //         toast.error(errMsg);
+  //         disconnectSocket();
+  //       }
+  //     }
+  //   );
+  // };
 
-  const initializeSocket = async (isBroadcast = false) => {
-    if (socket?.id) disconnectSocket();
-    socket = io(process.env.NEXT_PUBLIC_SOCKET || "wa", {
-      reconnection: false,
-    });
-    socket?.on("connect", () => {
-      if (isBroadcast) {
-        joinRoom();
-      } else setShowConnectionIdInput(true);
-      // setIsBroadcastLoading(false);
-      // setIsReceiveLoading(false);
-    });
-    socket?.on("connect_error", () => {
-      toast.error("Something Went Wrong!");
-      // setIsBroadcastLoading(false);
-      // setIsReceiveLoading(false);
-    });
-  };
+  // const initializeSocket = async (isBroadcast = false) => {
+  //   if (socket?.id) disconnectSocket();
+  //   socket = io(process.env.NEXT_PUBLIC_SOCKET || "wa", {
+  //     reconnection: false,
+  //   });
+  //   socket?.on("connect", () => {
+  //     if (isBroadcast) {
+  //       joinRoom();
+  //     } else setShowConnectionIdInput(true);
+  //     // setIsBroadcastLoading(false);
+  //     // setIsReceiveLoading(false);
+  //   });
+  //   socket?.on("connect_error", () => {
+  //     toast.error("Something Went Wrong!");
+  //     // setIsBroadcastLoading(false);
+  //     // setIsReceiveLoading(false);
+  //   });
+  // };
 
   // const broadcastData = () => {
   //   setIsBroadcastLoading(true);
@@ -121,9 +137,9 @@ export default function Home() {
   //   initializeSocket(true);
   // };
 
-  const disconnectSocket = () => {
-    socket?.disconnect();
-  };
+  // const disconnectSocket = () => {
+  //   socket?.disconnect();
+  // };
 
   // const disconnectBroadcast = () => {
   //   setIsBroadcastMode(false);
@@ -138,25 +154,25 @@ export default function Home() {
   //   disconnectSocket();
   // };
 
-  const recieveSocketData = (room: string) => {
-    if (!socket) return;
-    socket.on("receive-played-notes", (message: { playedNotes: INote[] }) => {
-      setPlayedNotes(message?.playedNotes);
-    });
-    socket.on("receive-lifted-notes", (message: { liftedNotes: string[] }) => {
-      setLiftedNotes(message?.liftedNotes);
-    });
-    socket.emit("request-sustain-toggle", room);
-    socket.on("receive-sustain-toggle", (message: { isSustain: boolean }) => {
-      setIsSustain(message?.isSustain);
-    });
-    socket.on("receive-disconnect-broadcast", () => {
-      toast.error("Broadcaster Disconnected!");
-      initializeSocket();
-      setIsReceiveMode(false);
-      setInputId("");
-    });
-  };
+  // const recieveSocketData = (room: string) => {
+  //   if (!socket) return;
+  //   socket.on("receive-played-notes", (message: { playedNotes: INote[] }) => {
+  //     setPlayedNotes(message?.playedNotes);
+  //   });
+  //   socket.on("receive-lifted-notes", (message: { liftedNotes: string[] }) => {
+  //     setLiftedNotes(message?.liftedNotes);
+  //   });
+  //   socket.emit("request-sustain-toggle", room);
+  //   socket.on("receive-sustain-toggle", (message: { isSustain: boolean }) => {
+  //     setIsSustain(message?.isSustain);
+  //   });
+  //   socket.on("receive-disconnect-broadcast", () => {
+  //     toast.error("Broadcaster Disconnected!");
+  //     initializeSocket();
+  //     setIsReceiveMode(false);
+  //     setInputId("");
+  //   });
+  // };
 
   // const openRecievingInput = () => {
   //   initializeSocket();
@@ -166,71 +182,71 @@ export default function Home() {
   //   setIsBroadcastMode(false);
   // };
 
-  const copyConnectionId = () => {
-    navigator.clipboard
-      .writeText(connectionId)
-      .then(() => {
-        toast.success("Connection ID copied to clipboard");
-      })
-      .catch((err) => {
-        toast.error("Error copying text to clipboard:", err);
-      });
-  };
+  // const copyConnectionId = () => {
+  //   navigator.clipboard
+  //     .writeText(connectionId)
+  //     .then(() => {
+  //       toast.success("Connection ID copied to clipboard");
+  //     })
+  //     .catch((err) => {
+  //       toast.error("Error copying text to clipboard:", err);
+  //     });
+  // };
 
-  const pasteConnectionId = () => {
-    navigator.clipboard.readText().then((res) => {
-      setInputId(res);
-    });
-  };
+  // const pasteConnectionId = () => {
+  //   navigator.clipboard.readText().then((res) => {
+  //     setInputId(res);
+  //   });
+  // };
 
-  const connectToId: FormEventHandler<HTMLFormElement> = (e) => {
-    e.preventDefault();
-    if (inputId === connectionId) {
-      toast.success("Already connected to the broadcaster!");
-    } else {
-      // setIsReceiveLoading(true);
-      socket?.emit(
-        "join-room",
-        { room: inputId, isBroadcaster: false },
-        (room: string, errMsg: string) => {
-          if (!errMsg) {
-            setIsReceiveMode(true);
-            setIsBroadcastMode(false);
-            setConnectionId(room);
-            recieveSocketData(room);
-            toast.success(`Connected To Broadcaster Successfully`);
-          } else {
-            toast.error(errMsg);
-          }
-          // setIsReceiveLoading(false);
-        }
-      );
-    }
-  };
+  // const connectToId: FormEventHandler<HTMLFormElement> = (e) => {
+  //   e.preventDefault();
+  //   if (inputId === connectionId) {
+  //     toast.success("Already connected to the broadcaster!");
+  //   } else {
+  //     // setIsReceiveLoading(true);
+  //     socket?.emit(
+  //       "join-room",
+  //       { room: inputId, isBroadcaster: false },
+  //       (room: string, errMsg: string) => {
+  //         if (!errMsg) {
+  //           setIsReceiveMode(true);
+  //           setIsBroadcastMode(false);
+  //           setConnectionId(room);
+  //           recieveSocketData(room);
+  //           toast.success(`Connected To Broadcaster Successfully`);
+  //         } else {
+  //           toast.error(errMsg);
+  //         }
+  //         // setIsReceiveLoading(false);
+  //       }
+  //     );
+  //   }
+  // };
 
-  useEffect(() => {
-    socket?.on("ask-sustain-toggle", () => {
-      socket?.emit(
-        "send-sustain-toggle",
-        {
-          isSustain,
-        },
-        connectionId
-      );
-    });
-  }, [socket, isSustain, isBroadcastMode]);
+  // useEffect(() => {
+  //   socket?.on("ask-sustain-toggle", () => {
+  //     socket?.emit(
+  //       "send-sustain-toggle",
+  //       {
+  //         isSustain,
+  //       },
+  //       connectionId
+  //     );
+  //   });
+  // }, [socket, isSustain, isBroadcastMode]);
 
   const handleNotePlay = (note: string, velocity = 100) => {
     setLiftedNotes((prev) => {
       const notes = prev.filter((notes) => notes !== note);
-      isBroadcastMode &&
-        socket?.emit(
-          "send-lifted-notes",
-          {
-            liftedNotes: notes,
-          },
-          connectionId
-        );
+      // isBroadcastMode &&
+      //   socket?.emit(
+      //     "send-lifted-notes",
+      //     {
+      //       liftedNotes: notes,
+      //     },
+      //     connectionId
+      //   );
       return notes;
     });
     setPlayedNotes((prev) => {
@@ -238,14 +254,14 @@ export default function Home() {
         ...prev,
         { note: note, velocity: velocity as number },
       ]);
-      isBroadcastMode &&
-        socket?.emit(
-          "send-played-notes",
-          {
-            playedNotes: notes,
-          },
-          connectionId
-        );
+      // isBroadcastMode &&
+      //   socket?.emit(
+      //     "send-played-notes",
+      //     {
+      //       playedNotes: notes,
+      //     },
+      //     connectionId
+      //   );
       playNoteAudio(notes);
       return notes;
     });
@@ -254,27 +270,27 @@ export default function Home() {
   const handleNoteLift = (note: string) => {
     setLiftedNotes((prev) => {
       const notes = _.uniq([...prev, note]);
-      isBroadcastMode &&
-        socket?.emit(
-          "send-lifted-notes",
-          {
-            liftedNotes: notes,
-          },
-          connectionId
-        );
+      // isBroadcastMode &&
+      //   socket?.emit(
+      //     "send-lifted-notes",
+      //     {
+      //       liftedNotes: notes,
+      //     },
+      //     connectionId
+      //   );
       stopNoteAudio(notes);
       return notes;
     });
     setPlayedNotes((prev) => {
       const notes = prev.filter((notes) => notes.note !== note);
-      isBroadcastMode &&
-        socket?.emit(
-          "send-played-notes",
-          {
-            playedNotes: notes,
-          },
-          connectionId
-        );
+      // isBroadcastMode &&
+      //   socket?.emit(
+      //     "send-played-notes",
+      //     {
+      //       playedNotes: notes,
+      //     },
+      //     connectionId
+      //   );
       return notes;
     });
   };
@@ -306,7 +322,14 @@ export default function Home() {
 
       myInput?.removeListener("noteoff");
     };
-  }, [myInput, isReceiveMode, isBroadcastMode, liftedNotes, isMute, isSustain]);
+  }, [
+    myInput,
+    isReceiveMode,
+    // isBroadcastMode,
+    liftedNotes,
+    isMute,
+    isSustain,
+  ]);
 
   useEffect(() => {
     isReceiveMode && playNoteAudio(playedNotes);
@@ -408,21 +431,44 @@ export default function Home() {
               value={isSustain}
               setValue={(value) => {
                 setIsSustain(value);
-                isBroadcastMode &&
-                  socket?.emit(
-                    "send-sustain-toggle",
-                    {
-                      isSustain: value,
-                    },
-                    connectionId
-                  );
+                // isBroadcastMode &&
+                //   socket?.emit(
+                //     "send-sustain-toggle",
+                //     {
+                //       isSustain: value,
+                //     },
+                //     connectionId
+                //   );
               }}
               label="Sustain"
               alignItems="center"
               isDisabled={isReceiveMode}
             />
             <Switch value={showLabel} setValue={setShowLabel} label="Notes" />
-            <Flex className="midi-selector" flexDirection="column" gap="7px">
+            <Flex
+              className="selector piano-size"
+              flexDirection="column"
+              gap="7px"
+            >
+              <Label htmlFor="piano-size-selector">Keys</Label>
+              <Select
+                placeholder="Size"
+                borderRadius="20px"
+                color={variables.accentColorDark}
+                id="piano-size-selector"
+                options={pianoSizes}
+                onChange={(value) => {
+                  value && setPianoSize(value as IOptions);
+                  typeof window !== "undefined" &&
+                    window?.localStorage.setItem(
+                      "pianoKeys",
+                      (value as IOptions).value
+                    );
+                }}
+                value={pianoSize}
+              />
+            </Flex>
+            <Flex className="selector midi" flexDirection="column" gap="7px">
               <Label htmlFor="midi-selector">Select MIDI Input</Label>
               <Select
                 placeholder="Select MIDI Input"
@@ -435,6 +481,7 @@ export default function Home() {
                   setSelecteMidiOption(value as IOptions);
                 }}
                 value={selectedMidiOption}
+                DropIcon={<div>x</div>}
                 isClearable
               />
             </Flex>
@@ -445,6 +492,7 @@ export default function Home() {
           handleNotePlay={handleNotePlay}
           handleNoteLift={handleNoteLift}
           showLabel={showLabel}
+          pianoSize={pianoSize.value}
         />
         <Flex
           className="streaming-controls-container"
@@ -474,7 +522,7 @@ export default function Home() {
               Recieve
             </Button>
           </Flex> */}
-          {showConnectionIdInput && (
+          {/* {showConnectionIdInput && (
             <form id="connection-form" onSubmit={connectToId}>
               <Flex
                 className="connection-input-container"
@@ -501,8 +549,8 @@ export default function Home() {
                 )}
               </Flex>
             </form>
-          )}
-          {(isBroadcastMode || isReceiveMode) && (
+          )} */}
+          {/* {(isBroadcastMode || isReceiveMode) && (
             <Flex className="connection-msg" alignItems="center" gap="10px">
               <p>
                 <span>Connection Id :</span> {connectionId}
@@ -511,8 +559,9 @@ export default function Home() {
                 COPY
               </Button>
             </Flex>
-          )}
+          )} */}
         </Flex>
+        <Footer />
       </Flex>
       <Toaster />
     </>

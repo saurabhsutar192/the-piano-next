@@ -52,3 +52,15 @@ export const keyboardNoteMap = {
 export const convertVelocityToVolume = (velocity: number) => {
   return (velocity / 100) * 0.3;
 };
+
+export const pianoSizes = [25, 49, 61, 88].map((size) => ({
+  label: String(size),
+  value: String(size),
+}));
+
+export const whiteKeyMap = {
+  "88": { whiteKeys: 52, octave: 0 },
+  "61": { whiteKeys: 36, octave: 1 },
+  "49": { whiteKeys: 29, octave: 2 },
+  "25": { whiteKeys: 15, octave: 3 },
+};

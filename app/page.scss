@@ -1,12 +1,18 @@
 @import "@/theme/colors.module.scss";
+body {
+  background: $backgroundColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
 
 .main {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  width: 100%;
   padding: 20px;
-  background: $backgroundColor;
   overflow-y: scroll;
   color: $accentColorDark;
 
@@ -26,24 +32,39 @@
     width: 100%;
 
     h1 {
-      font-size: clamp(40px, 10vw, 100px);
+      font-size: clamp(30px, 7vw, 100px);
       text-align: center;
       font-weight: 600;
       letter-spacing: 2%;
     }
 
     .piano-controls-container {
-      margin: 50px 0;
+      margin: 30px 0 50px;
       width: 100%;
 
       label {
         white-space: nowrap;
       }
 
-      .midi-selector {
-        width: clamp(250px, 20vw, 345px);
-        label {
-          visibility: hidden;
+      .selector {
+        &.midi {
+          width: clamp(250px, 20vw, 345px);
+          label {
+            visibility: hidden;
+          }
+        }
+        &.piano-size {
+          width: 55px;
+          [role="combobox"] {
+            div:first-child {
+              width: 100%;
+              display: flex;
+              justify-content: center !important;
+            }
+            div:has(> svg) {
+              display: none !important;
+            }
+          }
         }
 
         [role="combobox"] div:first-child {
@@ -51,9 +72,14 @@
             color: $hightlightColorDark;
           }
         }
-        [role="option"][data-hover="true"] {
-          background-color: $hightlightColorDark;
-          color: white;
+        [role="option"] {
+          padding: 8px 12px;
+          display: flex;
+          justify-content: center;
+          &[data-hover="true"] {
+            background-color: $hightlightColorDark;
+            color: white;
+          }
         }
       }
     }
