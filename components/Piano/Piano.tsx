@@ -24,7 +24,7 @@ const Piano = ({
   const blackKeys = useRef<HTMLDivElement>(null);
   const whiteKeys = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
+  const adjustBlackKeys = () => {
     const keyWidth = (
       whiteKeys?.current?.childNodes[0] as HTMLDivElement
     ).getBoundingClientRect().width;
@@ -33,6 +33,15 @@ const Piano = ({
       left: keyWidth / 2 + "px",
       fontSize: keyWidth / 2 + "px",
     });
+  };
+
+  useLayoutEffect(() => {
+    adjustBlackKeys();
+    window.addEventListener("resize", adjustBlackKeys);
+
+    return () => {
+      window.removeEventListener("resize", adjustBlackKeys);
+    };
   }, [blackKeys, pianoSize]);
 
   const renderKeys = (color: "white" | "black") => {
