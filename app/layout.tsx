@@ -1,5 +1,4 @@
 import "./globals.scss";
-import "@hover-design/react/dist/style.css";
 import "./page.scss";
 import type { Metadata } from "next";
 import { montserrat } from "./fonts";

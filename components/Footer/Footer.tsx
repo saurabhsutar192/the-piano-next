@@ -1,4 +1,4 @@
-import { Flex } from "@hover-design/react";
+import { Flex } from "@/components/ui";
 import React from "react";
 
 export const Footer = () => {

@@ -1,4 +1,4 @@
-@import "@/theme/colors.module.scss";
+@use "@/theme/colors.module.scss" as *;
 
 .piano {
   width: 100%;

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { WebMidi } from "webmidi";
 import _ from "lodash";
 import Piano from "../components/Piano/Piano";
-import { Flex, Label, Loader, Select } from "@hover-design/react";
+import { Flex, Label, Loader, Select } from "@/components/ui";
 import Switch from "../components/Switch/Switch";
 // import { Socket, io } from "socket.io-client";
 import { usePianoSound } from "@/hooks/usePianoSound";
@@ -20,8 +20,8 @@ import {
   // toast,
   Toaster,
 } from "react-hot-toast";
-import variables from "@/theme/colors.module.scss";
-import { montserratSub } from "./fonts";
+import { colors } from "@/theme/colors";
+import { greatVibes } from "./fonts";
 import { Footer } from "@/components/Footer/Footer";
 
 // Comments out the broadcast feature temporarily
@@ -397,8 +397,6 @@ export default function Home() {
         className="loader-container"
       >
         <Loader
-          size={40}
-          color={variables.accentColorDark}
           className="loader"
         />
         <p>Loading Sounds...</p>
@@ -413,7 +411,7 @@ export default function Home() {
         className="piano-container"
         alignItems="center"
       >
-        <h1 className={montserratSub.className}>THE PIANO</h1>
+        <h1 className={greatVibes.className}>The Piano</h1>
         <Flex className="piano-controls-container" justifyContent="center">
           <Flex
             className="piano-controls"
@@ -449,12 +447,13 @@ export default function Home() {
               className="selector piano-size"
               flexDirection="column"
               gap="7px"
+              alignItems="center"
             >
               <Label htmlFor="piano-size-selector">Keys</Label>
               <Select
                 placeholder="Size"
                 borderRadius="20px"
-                color={variables.accentColorDark}
+                color={colors.accentColorDark}
                 id="piano-size-selector"
                 options={pianoSizes}
                 onChange={(value) => {
@@ -466,6 +465,8 @@ export default function Home() {
                     );
                 }}
                 value={pianoSize}
+                hideIcons
+                centeredOptions
               />
             </Flex>
             <Flex className="selector midi" flexDirection="column" gap="7px">
@@ -473,7 +474,7 @@ export default function Home() {
               <Select
                 placeholder="Select MIDI Input"
                 borderRadius="20px"
-                color={variables.accentColorDark}
+                color={colors.accentColorDark}
                 id="midi-selector"
                 options={midiOptions}
                 isDisabled={isReceiveMode}
@@ -481,7 +482,6 @@ export default function Home() {
                   setSelecteMidiOption(value as IOptions);
                 }}
                 value={selectedMidiOption}
-                DropIcon={<div>x</div>}
                 isClearable
               />
             </Flex>
