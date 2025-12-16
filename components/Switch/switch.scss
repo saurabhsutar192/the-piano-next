@@ -1,27 +1,42 @@
-@import "@/theme/colors.module.scss";
+@use "@/theme/colors.module.scss" as *;
 
 .label-switch {
-  #label-switch:checked + span {
-    background: $hightlightColorLight;
-    border: 1px solid $hightlightColorDark;
-    &::before {
-      background: $hightlightColorDark;
-    }
-  }
+  .switch-track {
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+    border-radius: 14px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    background: transparent;
+    border: 2px solid $accentColorDark;
 
-  #label-switch:disabled + span {
-    background: $accentColorLight;
-    border: 1px solid $accentColorDark;
-    &::before {
+    .switch-thumb {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      transition: left 0.2s, background 0.2s;
       background: $accentColorDark;
     }
-    cursor: not-allowed;
-  }
 
-  span {
-    border: 1px solid $accentColorDark;
-    &::before {
-      background: $accentColorDark;
+    &.checked {
+      background: $hightlightColorLight;
+      border-color: $hightlightColorDark;
+
+      .switch-thumb {
+        left: 25px;
+        background: $hightlightColorDark;
+      }
+    }
+
+    &.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 }

@@ -1,0 +1,95 @@
+@use "@/theme/colors.module.scss" as *;
+
+.select {
+  position: relative;
+  width: 100%;
+  font-size: 14px;
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    cursor: pointer;
+    gap: 10px;
+    border: 2px solid $accentColorDark;
+
+    &.disabled {
+      cursor: not-allowed;
+    }
+
+    .select-value {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      &.placeholder {
+        color: $accentColorDark;
+      }
+    }
+
+    .select-icons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+
+      .select-clear {
+        cursor: pointer;
+      }
+
+      .select-arrow {
+        transition: transform 0.2s;
+
+        &.open {
+          transform: rotate(180deg);
+        }
+      }
+    }
+  }
+
+  .select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    margin-top: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px,
+      rgba(0, 0, 0, 0.22) 0px 15px 12px;
+
+    .select-option {
+      padding: 8px 16px;
+      cursor: pointer;
+
+      &.centered {
+        display: flex;
+        justify-content: center;
+      }
+
+      &[data-selected="true"] {
+        background-color: $hightlightColorDark;
+        color: #fff;
+      }
+
+      &:hover:not([data-selected="true"]) {
+        background-color: $hightlightColorLight;
+        // color: #fff;
+      }
+
+      &.empty {
+        color: #999;
+        cursor: default;
+      }
+    }
+  }
+}
