@@ -1,7 +1,6 @@
 import React, { ReactNode, ButtonHTMLAttributes } from "react";
 import "./button.scss";
 import { Loader } from "@/components/ui";
-import { colors } from "@/theme/colors";
 
 type IButton = {
   children: ReactNode;
@@ -33,7 +32,6 @@ export const Button = ({
         {isLoading && (
           <span>
             <Loader
-              color={colors.accentColorDark}
               size={20}
             />
           </span>
