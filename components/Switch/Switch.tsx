@@ -30,10 +30,10 @@ const Switch = ({
       alignItems={alignItems}
       gap="13px"
     >
-      {label && <Label htmlFor="label-switch">{label}</Label>}
+      {label && <Label htmlFor={"switch" + label}>{label}</Label>}
       <input
         type="checkbox"
-        id="label-switch"
+        id={"switch" + label}
         checked={value}
         onChange={handleToggle}
         disabled={isDisabled}
@@ -51,7 +51,9 @@ const Switch = ({
             handleToggle();
           }
         }}
-        className={`switch-track ${value ? "checked" : ""} ${isDisabled ? "disabled" : ""}`}
+        className={`switch-track ${value ? "checked" : ""} ${
+          isDisabled ? "disabled" : ""
+        }`}
       >
         <span className="switch-thumb" />
       </span>

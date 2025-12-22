@@ -53,6 +53,9 @@ body {
             visibility: hidden;
           }
         }
+        *:focus {
+          outline: 2px solid $hightlightColorLight;
+        }
       }
     }
 
