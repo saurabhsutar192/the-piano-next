@@ -1,0 +1,22 @@
+@use "@/theme/colors.module.scss" as *;
+
+.loader {
+  animation: spin 1s linear infinite;
+
+  .loader-track {
+    stroke: $hightlightColorDark;
+  }
+
+  .loader-spinner {
+    stroke: $accentColorDark;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

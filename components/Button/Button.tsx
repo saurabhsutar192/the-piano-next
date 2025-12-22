@@ -1,7 +1,6 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, ButtonHTMLAttributes } from "react";
 import "./button.scss";
-import { Loader } from "@hover-design/react";
-import variables from "@/theme/colors.module.scss";
+import { Loader } from "@/components/ui";
 
 type IButton = {
   children: ReactNode;
@@ -10,7 +9,7 @@ type IButton = {
   onClose?: () => void;
   onClick?: () => void;
   isLoading?: boolean;
-} & JSX.IntrinsicElements["button"];
+} & ButtonHTMLAttributes<HTMLButtonElement>;
 
 export const Button = ({
   children,
@@ -33,9 +32,7 @@ export const Button = ({
         {isLoading && (
           <span>
             <Loader
-              color={variables.accentColorDark}
-              dashLength={50}
-              height={"10px"}
+              size={20}
             />
           </span>
         )}

@@ -1,4 +1,4 @@
-@import "@/theme/colors.module.scss";
+@use "@/theme/colors.module.scss" as *;
 body {
   background: $backgroundColor;
   display: flex;
@@ -13,7 +13,7 @@ body {
   justify-content: center;
   width: 100%;
   padding: 20px;
-  overflow-y: scroll;
+  overflow-y: auto;
   color: $accentColorDark;
 
   .loader-container {
@@ -48,37 +48,9 @@ body {
 
       .selector {
         &.midi {
-          width: clamp(250px, 20vw, 345px);
+          width: clamp(200px, 15vw, 300px);
           label {
             visibility: hidden;
-          }
-        }
-        &.piano-size {
-          width: 55px;
-          [role="combobox"] {
-            div:first-child {
-              width: 100%;
-              display: flex;
-              justify-content: center !important;
-            }
-            div:has(> svg) {
-              display: none !important;
-            }
-          }
-        }
-
-        [role="combobox"] div:first-child {
-          & > div {
-            color: $hightlightColorDark;
-          }
-        }
-        [role="option"] {
-          padding: 8px 12px;
-          display: flex;
-          justify-content: center;
-          &[data-hover="true"] {
-            background-color: $hightlightColorDark;
-            color: white;
           }
         }
       }
