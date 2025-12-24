@@ -50,7 +50,7 @@ export const keyboardNoteMap = {
 };
 
 export const convertVelocityToVolume = (velocity: number) => {
-  return (velocity / 100) * 0.3;
+  return 0.1 * Math.pow(velocity / 100, 1.7);
 };
 
 export const pianoSizes = [25, 49, 61, 88].map((size) => ({
